@@ -28,9 +28,9 @@ Route::group([
 	Route::post('login', 'AuthController@login');
 	//Route::post('driver/add', 'AuthController@login');
 });
-Route::get('sendSms', function () {
-	return send_sms("this is message", "+923147592241");
-});
+// Route::get('sendSms', function () {
+// 	return send_sms("this is message", "+923147592241");
+// });
 Route::post('user/verify', 'AuthController@verifyUser');
 Route::post('user/verifyOtp', 'AuthController@verifyOtp');
 Route::post('customer/add', 'AuthController@addCustomer');
