@@ -338,6 +338,13 @@
     ),
     'prefix' => 'houstonrabbit_cache',
   ),
+  'constants' => 
+  array (
+    'telnyx_secret_key' => NULL,
+    'telnyx_from' => NULL,
+    'firebase_key' => 'firebase/houston-rabbit-live-6121f407ea3b.json',
+    'firebase_db' => 'https://houston-rabbit-live.firebaseio.com/',
+  ),
   'database' => 
   array (
     'default' => 'mysql',
