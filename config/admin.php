@@ -313,27 +313,27 @@ return [
 	*/
 	'extensions' => [
 
-        'media-manager' => [
-        
-            // Select a local disk that you configured in `config/filesystem.php`
-            'disk' => 'public'
-        ],
-        'env-manager' => [
-        // If the value is set to false, this extension will be disabled
-        'enable' => true
-    	],
-    	'api-tester' => [
-        
-            // route prefix for APIs
-            'prefix' => 'api',
+		'media-manager' => [
 
-            // auth guard for api
-            'guard'  => 'api',
+			// Select a local disk that you configured in `config/filesystem.php`
+			'disk' => 'public',
+		],
+		'env-manager' => [
+			// If the value is set to false, this extension will be disabled
+			'enable' => true,
+		],
+		'api-tester' => [
 
-            // If you are not using the default user model as the authentication model, set it up
-            'user_retriever' => function ($id) {
-                return \App\User::find($id);
-            },
-        ],
-    ],
+			// route prefix for APIs
+			'prefix' => 'api',
+
+			// auth guard for api
+			'guard' => 'api',
+
+			// If you are not using the default user model as the authentication model, set it up
+			// 'user_retriever' => function ($id) {
+			// 	return \App\User::find($id);
+			// },
+		],
+	],
 ];

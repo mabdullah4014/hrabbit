@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\AppSetting;
 use App\AdaptivePaypalSetting;
+use App\AppSetting;
 use App\Country;
 use App\Currency;
 use App\Customer;
@@ -16,6 +16,7 @@ use App\Language;
 use App\State;
 use App\VehicleCategory;
 use Carbon\Carbon;
+use FCM;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -26,7 +27,6 @@ use LaravelFCM\Message\PayloadDataBuilder;
 use LaravelFCM\Message\PayloadNotificationBuilder;
 use Mail;
 use PDF;
-use FCM;
 
 class BookingController extends Controller {
 
@@ -90,13 +90,13 @@ class BookingController extends Controller {
 			return $this->sendError('Invalid Params.');
 		}
 		$jobs = DriverTrip::where('id', $input['booking_id'])->first();
-									
-		$category=str_replace('_',' ', $jobs->vehicle_type);
-		$amount= round($jobs->total_amount, 2);	
-		$social_url=DB::table('settings')->first();
-		$logo=$social_url->logo_url;	
+
+		$category = str_replace('_', ' ', $jobs->vehicle_type);
+		$amount = round($jobs->total_amount, 2);
+		$social_url = DB::table('settings')->first();
+		$logo = $social_url->logo_url;
 		$curr = AppSetting::select('currency')->first();
-				$currency = Currency::select('currency', 'symbol')->where('id', $curr->currency)->first();
+		$currency = Currency::select('currency', 'symbol')->where('id', $curr->currency)->first();
 
 		$data = array(
 			'DriverName' => $jobs->driver_name,
@@ -108,18 +108,17 @@ class BookingController extends Controller {
 			'TotalDistance' => $jobs->total_distance,
 			'TotalAmount' => $amount,
 			'logo' => $logo,
-			'currency' => $currency->symbol
+			'currency' => $currency->symbol,
 		);
 
 		$pdf = PDF::loadView('mails.pdfview', $data);
 		$customer_id = $jobs->cus_id;
 		$customer_email = Customer::where('id', $customer_id)->first();
 		$email = $customer_email->email;
-		$app_name=env("APP_NAME");
-		$from_mail=env("MAIL_USERNAME");
-		
-		
-		Mail::send('mails.pdftemplate', $data, function ($message) use ($pdf, $email,$app_name,$from_mail) {
+		$app_name = env("APP_NAME");
+		$from_mail = env("MAIL_USERNAME");
+
+		Mail::send('mails.pdftemplate', $data, function ($message) use ($pdf, $email, $app_name, $from_mail) {
 			$message->from($from_mail, $app_name);
 
 			$message->to($email)->subject('Invoice');
@@ -141,8 +140,8 @@ class BookingController extends Controller {
 			return $this->sendError('Invalid Params.');
 		}$offset = $input['offset'];
 
-		$current_time = date("H:i:s",strtotime(date("H:i:s")." -5 minutes"));
-		
+		$current_time = date("H:i:s", strtotime(date("H:i:s") . " -5 minutes"));
+
 		$date = date('Y-m-d H:i:s');
 		if ($input['type'] == "customer") {
 			// //	$ratings = CustomerFeedback::select(DB::raw('AVG(driver_rating) as ratings'))->groupBy('customers_id')->get();
@@ -151,7 +150,7 @@ class BookingController extends Controller {
 			// 		$ratings[$key->to_id] = $key->rating;
 			// 	}
 			$customer_id = $input['user_id'];
-			$jobs = DriverTrip::where('cus_id', $customer_id)->where('status', '0')->where('ride_time','>=',$date)->offset($offset)->limit(8)->get();
+			$jobs = DriverTrip::where('cus_id', $customer_id)->where('status', '0')->where('ride_time', '>=', $date)->offset($offset)->limit(8)->get();
 			if (count($jobs) == 0) {
 				$response['message'] = 'No record Found.';
 				$response['page'] = $offset;
@@ -199,12 +198,12 @@ class BookingController extends Controller {
 				$driver = DriverCheckin::where('driver_id', $input['driver_id'])->first();
 				if (is_object($driver)) {
 
-					$vehice = VehicleCategory::where('id',$driver_details->vehicle_id)->first();
-					if(!is_object($vehice)){
- 					    $response['result'] = null;
+					$vehice = VehicleCategory::where('id', $driver_details->vehicle_id)->first();
+					if (!is_object($vehice)) {
+						$response['result'] = null;
 						$response['message'] = "Vehicle not found";
 						return response()->json($response, 200);
-					} elseif(is_object($vehice) && $vehice->status!='1'){
+					} elseif (is_object($vehice) && $vehice->status != '1') {
 						$response['result'] = null;
 						$response['message'] = "Vehicle is inactive";
 						return response()->json($response, 200);
@@ -222,12 +221,12 @@ class BookingController extends Controller {
 					$response['result'] = $driver;
 					$response['message'] = "success";
 
-					$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/'.env('FIREBASE_KEY'));
-			   		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
-			   		$database = $firebase->getDatabase();
+					$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
+					$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
+					$database = $firebase->getDatabase();
 
-			   		$updates = [
-					 'drivers_status/' .$input['driver_id']. '/admin_status' => '0',
+					$updates = [
+						'drivers_status/' . $input['driver_id'] . '/admin_status' => '0',
 					];
 					$newpost = $database->getReference()
 						->update($updates);
@@ -291,144 +290,141 @@ class BookingController extends Controller {
 	}
 
 	public function CronCheck() {
-		$ctime  = date("h:i A", strtotime("+20 minutes"));
+		$ctime = date("h:i A", strtotime("+20 minutes"));
 		$c1time = date("h:i A", strtotime("+40 minutes"));
 
-		$trips = DriverTrip::whereDate('today_date',date('Y-m-d'))->where('current_status', 0)->where('cancel_status','<>','1')->whereBetween('pick_up_time', [$ctime, $c1time])->get();
-
+		$trips = DriverTrip::whereDate('today_date', date('Y-m-d'))->where('current_status', 0)->where('cancel_status', '<>', '1')->whereBetween('pick_up_time', [$ctime, $c1time])->get();
 
 		if (count($trips) > 0) {
 			foreach ($trips as $trip) {
 				$tripcount = 0;
-				if(strtotime($trip->today_date.' '.$trip->pick_up_time) > strtotime(now()))
-				{	 // Check Previous date
+				if (strtotime($trip->today_date . ' ' . $trip->pick_up_time) > strtotime(now())) {
+					// Check Previous date
 
-				$drivers = DriverCheckin::where('checkin_status', 1)->where('booking_status', 0)->where('vehicle_id', $trip->vehicle_id)->get();
-				$count = 0;
-				if (count($drivers) > 0) {
-					$total_drivers = count($drivers);
+					$drivers = DriverCheckin::where('checkin_status', 1)->where('booking_status', 0)->where('vehicle_id', $trip->vehicle_id)->get();
+					$count = 0;
+					if (count($drivers) > 0) {
+						$total_drivers = count($drivers);
 
-					foreach ($drivers as $driver) {
-						$customer = Customer::where('id', $trip->cus_id)->first();
-						$pickup_lat = $trip->pickup_lat;
-						$pickup_lon = $trip->pickup_lon;
-						$pick_up_time = $trip->pick_up_time;
-						$d_lat = $driver->d_lat;
-						$d_lon = $driver->d_lon;
-						// $total_km = $this->distance($d_lat, $d_lon, $pickup_lat, $pickup_lon, "K");
-						$total_km = $this->getDistance($pickup_lat, $pickup_lon,$d_lat, $d_lon);
-						$total_kms = round($total_km, 2);
-						if ($total_kms < 5.00) {
-							$token = $driver->driver->device_id;
-							$msg = "New Ride Request";
-							if($token!='' && $token!='0'){
+						foreach ($drivers as $driver) {
+							$customer = Customer::where('id', $trip->cus_id)->first();
+							$pickup_lat = $trip->pickup_lat;
+							$pickup_lon = $trip->pickup_lon;
+							$pick_up_time = $trip->pick_up_time;
+							$d_lat = $driver->d_lat;
+							$d_lon = $driver->d_lon;
+							// $total_km = $this->distance($d_lat, $d_lon, $pickup_lat, $pickup_lon, "K");
+							$total_km = $this->getDistance($pickup_lat, $pickup_lon, $d_lat, $d_lon);
+							$total_kms = round($total_km, 2);
+							if ($total_kms < 5.00) {
+								$token = $driver->driver->device_id;
+								$msg = "New Ride Request";
+								if ($token != '' && $token != '0') {
+									$this->sendFCMDriver($token, $msg);
+								}
+
+								$count++;
+								$tripcount++;
+								$input1['DriverId'] = $driver->driver->id;
+								$input1['CustomerId'] = $trip->cus_id;
+								$input1['CustomerName'] = $trip->customer_name;
+								$input1['CustomerPhoneNumber'] = $trip->customer->country . $trip->customer->phone_number;
+								$input1['TodayDate'] = Date('Y-m-d', time());
+								$input1['PhoneNumber'] = $trip->customer->phone_number;
+								$input1['PickupTime'] = $trip->pick_up_time;
+								$input1['Status'] = 0; // Service request waiting
+								$service = VehicleCategory::where('vehicle_type', $trip->vehicle_type)->first();
+								$input1['CategoryType'] = $trip->vehicle_type;
+								$input1['PriceKm'] = $service->price_per_km; //	123456
+								// $customer->user_photo = env('IMG_URL') . 'storage/' . $customer->user_photo;
+								$image1 = $trip->customer->user_photo;
+								$trimmed = str_replace('/public', '/storage', $image1);
+
+								if ($trip->added_by != '' && $trip->added_by != '0') {
+									$input1['RequestFrom'] = 'Admin';
+									$input1['RequestFromOtp'] = 1;
+								} else {
+									$input1['RequestFrom'] = 'Normal';
+									$input1['RequestFromOtp'] = 1;
+								}
+
+								$input1['CustomerProfile'] = $trimmed;
+								//	$input1['CustomerProfile'] = $trip->customer->user_photo;
+								$input1['PickupLocation'] = $trip->pick_up;
+								$input1['DropLocation'] = $trip->drop_location;
+								$input1['PickupLatitude'] = $trip->pickup_lat;
+								$input1['PickupLongitude'] = $trip->pickup_lon;
+								$input1['DropLatitude'] = $trip->drop_lat;
+								$input1['DropLongitude'] = $trip->drop_lon;
+								$input1['CreatedTime'] = date('d/m/y H:i:s');
+								$input1['Title'] = "Schedule Trip Request";
+								$input1['Profile'] = $trip->customer->user_photo;
+								$input1['Status'] = 1;
+								$input1['CustomerLastName'] = $trip->customer_lname;
+								$input1['BookingId'] = $trip->id;
+
+								//$input['DriverId'] = $driver->driver->id;
+								$ctime1 = date('H:i:s');
+
+								if ($trip->added_by != '' && $trip->added_by != '0') {
+									$input1['RequestFrom'] = 'Admin';
+									$input1['RequestFromOtp'] = 1;
+								} else {
+									$input1['RequestFrom'] = 'Normal';
+									$input1['RequestFromOtp'] = 1;
+								}
+
+								$input['CustomerName'] = $trip->customer_name;
+								$input['CustomerLastName'] = $trip->customer_lname;
+								$input['RequestTime'] = Date('h:i:s a', time());
+								$input['PickupLocation'] = $trip->pick_up;
+								$input['DropLocation'] = $trip->drop_location;
+								$input['PickupTime'] = $trip->pick_up_time;
+								$input['Status'] = 1; // Service request waiting
+								$input['BookingId'] = $trip->id;
+								$service = VehicleCategory::where('vehicle_type', $trip->vehicle_type)->first();
+								$input['CategoryType'] = $trip->vehicle_type;
+								$this->saveFirebaseCron($input, $input1, $trip->cus_id, $driver->driver->id);
+								$this->saveFirebaseCronCus($input1, $trip->cus_id);
+								/////////////////////
+								$response['message'] = "Push Message Sent";
+								$response['count'] = $count;
+							}
+						}
+						if ($count == 0) {
+							$customer = Customer::where('id', $trip->cus_id)->first();
+							$token = $customer->device_id;
+							$msg = "No Drivers Available";
+							if ($token != '' && $token != '0') {
 								$this->sendFCMDriver($token, $msg);
-							}	
-
-							$count++;
-							$tripcount++;
-							$input1['DriverId'] = $driver->driver->id;
-							$input1['CustomerId'] = $trip->cus_id;
-							$input1['CustomerName'] = $trip->customer_name;
-							$input1['CustomerPhoneNumber'] = $trip->customer->country . $trip->customer->phone_number;
-							$input1['TodayDate'] = Date('Y-m-d', time());
-							$input1['PhoneNumber'] = $trip->customer->phone_number;
-							$input1['PickupTime'] = $trip->pick_up_time;
-							$input1['Status'] = 0; // Service request waiting
-							$service = VehicleCategory::where('vehicle_type', $trip->vehicle_type)->first();
-							$input1['CategoryType'] = $trip->vehicle_type;
-							$input1['PriceKm'] = $service->price_per_km;			//	123456
-							// $customer->user_photo = env('IMG_URL') . 'storage/' . $customer->user_photo;
-							$image1=$trip->customer->user_photo;
-							$trimmed = str_replace('/public','/storage', $image1);
-								
-							if($trip->added_by!='' && $trip->added_by != '0'){
-							  $input1['RequestFrom'] = 'Admin';	
-							  $input1['RequestFromOtp'] = 1;
-							} else {
-							  $input1['RequestFrom'] = 'Normal';	
-							  $input1['RequestFromOtp'] = 1;	
 							}
-
-							$input1['CustomerProfile'] = $trimmed;
-						//	$input1['CustomerProfile'] = $trip->customer->user_photo;
-							$input1['PickupLocation'] = $trip->pick_up;
-							$input1['DropLocation'] = $trip->drop_location;
-							$input1['PickupLatitude'] = $trip->pickup_lat;
-							$input1['PickupLongitude'] = $trip->pickup_lon;
-							$input1['DropLatitude'] = $trip->drop_lat;
-							$input1['DropLongitude'] = $trip->drop_lon;
-							$input1['CreatedTime'] = date('d/m/y H:i:s');
-							$input1['Title'] = "Schedule Trip Request";
-							$input1['Profile'] = $trip->customer->user_photo;
-							$input1['Status'] = 1;
-							$input1['CustomerLastName'] = $trip->customer_lname;
-							$input1['BookingId'] = $trip->id;
-
-							//$input['DriverId'] = $driver->driver->id;
-							$ctime1 = date('H:i:s');
-
-							if($trip->added_by!='' && $trip->added_by != '0'){
-							  $input1['RequestFrom'] = 'Admin';	
-							  $input1['RequestFromOtp'] = 1;
-							} else {
-							  $input1['RequestFrom'] = 'Normal';	
-							  $input1['RequestFromOtp'] = 1;	
-							}
-							
-							$input['CustomerName'] = $trip->customer_name;
-							$input['CustomerLastName'] = $trip->customer_lname;
-							$input['RequestTime'] = Date('h:i:s a', time());
-							$input['PickupLocation'] = $trip->pick_up;
-							$input['DropLocation'] = $trip->drop_location;
-							$input['PickupTime'] = $trip->pick_up_time;
-							$input['Status'] = 1; // Service request waiting
-							$input['BookingId'] = $trip->id;
-							$service = VehicleCategory::where('vehicle_type', $trip->vehicle_type)->first();
-							$input['CategoryType'] = $trip->vehicle_type;
-							$this->saveFirebaseCron($input, $input1, $trip->cus_id, $driver->driver->id);
-							$this->saveFirebaseCronCus($input1, $trip->cus_id);
-							/////////////////////
+							$response['message'] = "No Drivers Available";
+							//echo "No Drivers Available";
+						} else {
 							$response['message'] = "Push Message Sent";
 							$response['count'] = $count;
+							//return $response;
 						}
-					}
-					if ($count == 0) {
+					} else {
 						$customer = Customer::where('id', $trip->cus_id)->first();
 						$token = $customer->device_id;
 						$msg = "No Drivers Available";
-						if($token!='' && $token!='0'){
+						if ($token != '' && $token != '0') {
 							$this->sendFCMDriver($token, $msg);
-						}	
+						}
 						$response['message'] = "No Drivers Available";
 						//echo "No Drivers Available";
 					}
-					else
-					{
-						$response['message'] = "Push Message Sent";
-						$response['count'] = $count;
-						//return $response;
-					}
-				} else {
-					$customer = Customer::where('id', $trip->cus_id)->first();
-					$token = $customer->device_id;
-					$msg = "No Drivers Available";
-					if($token!='' && $token!='0'){
-						$this->sendFCMDriver($token, $msg);
-					}	
-					$response['message'] = "No Drivers Available";
-					//echo "No Drivers Available";
-				}
 
-			} // Check Previous date
-			if ($tripcount == 0) {
-						/*$customer = Customer::where('id', $trip->cus_id)->first();
+				} // Check Previous date
+				if ($tripcount == 0) {
+					/*$customer = Customer::where('id', $trip->cus_id)->first();
 						$token = $customer->device_id;
 						$msg = "No Trips Available";
 						$this->sendFCMDriver($token, $msg);*/
-						$response['message'] = "No Trips Found";
-						//echo "No Trips Found";
-					}
+					$response['message'] = "No Trips Found";
+					//echo "No Trips Found";
+				}
 			}
 		} else {
 			$response['message'] = "No Trips Found";
@@ -455,7 +451,7 @@ class BookingController extends Controller {
 		$setting = AppSetting::first()->toArray();
 		$response['app_setting'] = $setting;
 		$paypal_setting = AdaptivePaypalSetting::first();
-		
+
 		// $smstemplastes = SmsTemplate::where('status',1)->get();
 		// $response['sms_templates'] = $smstemplastes->toArray();
 		$currency = Currency::where('status', 1)->get();
@@ -479,17 +475,21 @@ class BookingController extends Controller {
 		//$id = $request->input('id');
 		$customerCategories = VehicleCategory::where('status', 1)->get();
 		foreach ($customerCategories as $object) {
-			$var =  $object->toArray();
-			$var['price_per_km'] =(string)$var['price_per_km'];
-			$var['base_fare'] =(string)$var['base_fare'];
+			$var = $object->toArray();
+			$var['price_per_km'] = (string) $var['price_per_km'];
+			$var['base_fare'] = (string) $var['base_fare'];
 			$arrays[] = $var;
 		}
-		if (empty($arrays)) {
-			$response['message'] = 'No records Found.';
-			return response()->json($response, 200);
+		$response['result'] = [];
+		if (!empty($arrays)) {
+			$response['result']['categories'] = $arrays;
+			// 	$response['message'] = 'No records Found.';
+			// 	return response()->json($response, 200);
 		}
 
-		$response['result'] = $arrays;
+		$response['result']['makes'] = \App\VehicleMake::all();
+		$response['result']['models'] = \App\VehicleModel::all();
+		$response['result']['colors'] = \App\VehicleColor::all();
 		$response['message'] = 'categories listed successfully.';
 		return response()->json($response, 200);
 	}
@@ -642,17 +642,17 @@ class BookingController extends Controller {
 	}
 
 	protected function saveBookingInFirebase($input) {
-		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/'.env('FIREBASE_KEY'));
+		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
 		$appsetting = AppSetting::first();
-		$newpost = $database->getReference('unassigned/'.$input['booking_id'])->set($input);
+		$newpost = $database->getReference('unassigned/' . $input['booking_id'])->set($input);
 	}
-	public function get_booking_data(Request $request){
+	public function get_booking_data(Request $request) {
 		$input = $request->all();
-		$booking_details = DriverTrip::where('id',$input['booking_id'])->first();
-		$customer_details = Customer::where('id',$booking_details->cus_id)->first();
-		$driver_details = Driver::where('id',$booking_details->driver_id)->first();
+		$booking_details = DriverTrip::where('id', $input['booking_id'])->first();
+		$customer_details = Customer::where('id', $booking_details->cus_id)->first();
+		$driver_details = Driver::where('id', $booking_details->driver_id)->first();
 
 		$data['phone_number'] = $customer_details->phone_number;
 		$data['customer_name'] = $customer_details->name;
@@ -670,16 +670,16 @@ class BookingController extends Controller {
 		return json_encode($data);
 	}
 
-	public function automatic_assign(Request $request){
+	public function automatic_assign(Request $request) {
 		$input = $request->all();
-		$booking_details = DriverTrip::where('id',$input['booking_id'])->first();
-		$customer_details = Customer::where('id',$booking_details->cus_id)->first();
-		$driver_details = Driver::where('id',$booking_details->driver_id)->first();
+		$booking_details = DriverTrip::where('id', $input['booking_id'])->first();
+		$customer_details = Customer::where('id', $booking_details->cus_id)->first();
+		$driver_details = Driver::where('id', $booking_details->driver_id)->first();
 
 		$data['latitude'] = $booking_details->pickup_lat;
 		$data['longitude'] = $booking_details->pickup_lon;
 		$data['vehicle_id'] = $booking_details->vehicle_id;
-		
+
 		$driverList = $this->available_drivers($data);
 		$input['booking_id'] = $booking_details->id;
 		$input['vehicle_id'] = $booking_details->vehicle_id;
@@ -704,20 +704,20 @@ class BookingController extends Controller {
 			$input['customer_avatar'] = ($customer->avatar != "" ? $customer->avatar : "");
 			$email = $customer->email;
 			$name = $customer->name;
-			$social_url=DB::table('settings')->first();
-			$skype=$social_url->skype;
-			$facebook=$social_url->facebook;
-			$twitter=$social_url->twitter;
-			$app_name=env("APP_NAME");
-			$from_mail=env("MAIL_USERNAME");
-			$website=$social_url->website_url;
-			$email_to=$social_url->mail_to;
-			$logo=$social_url->logo_url;
-			$admin_mail=$social_url->email;
-			$content=Email::select('content')->where('template_name', '=', 'Customer Trip Save')->first();
-			$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
+			$social_url = DB::table('settings')->first();
+			$skype = $social_url->skype;
+			$facebook = $social_url->facebook;
+			$twitter = $social_url->twitter;
+			$app_name = env("APP_NAME");
+			$from_mail = env("MAIL_USERNAME");
+			$website = $social_url->website_url;
+			$email_to = $social_url->mail_to;
+			$logo = $social_url->logo_url;
+			$admin_mail = $social_url->email;
+			$content = Email::select('content')->where('template_name', '=', 'Customer Trip Save')->first();
+			$content = str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
 
-			$mail_header = array("name" => $name,'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,'content'=>$content);
+			$mail_header = array("name" => $name, 'skype' => $skype, 'facebook' => $facebook, 'twitter' => $twitter, 'website' => $website, 'email_to' => $email_to, 'logo' => $logo, 'app_name' => $app_name, 'admin_mail' => $admin_mail, 'content' => $content);
 
 			$response['message'] = "Request sent";
 
@@ -732,73 +732,72 @@ class BookingController extends Controller {
 		return $response;
 	}
 
-	public function deleteFirebase($booking_id){
-		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/'.env('FIREBASE_KEY'));
+	public function deleteFirebase($booking_id) {
+		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
 
-		$newpost = $database->getReference('unassigned/'.$booking_id)->remove();
+		$newpost = $database->getReference('unassigned/' . $booking_id)->remove();
 	}
 
-	public function cusTimeoutCancel(Request $request){
-		$setting = DB::table('app_settings')->select('time_period')->where('id',1)->first();	
+	public function cusTimeoutCancel(Request $request) {
+		$setting = DB::table('app_settings')->select('time_period')->where('id', 1)->first();
 		$input = $request->all();
-		$validator = Validator::make($input, [				
-				'booking_id' => 'required',
-				'customer_id' => 'required',
-				'pick_up_time' => 'required',
-			]);
+		$validator = Validator::make($input, [
+			'booking_id' => 'required',
+			'customer_id' => 'required',
+			'pick_up_time' => 'required',
+		]);
 
-			if ($validator->fails()) {
-				return $this->sendError('Validation Error.' . $validator->errors());
-			}	
+		if ($validator->fails()) {
+			return $this->sendError('Validation Error.' . $validator->errors());
+		}
 		//$date = $input['date'];
 		$booking_id = $input['booking_id'];
 		$customer_id = $input['customer_id'];
 		$time = strtotime($input['pick_up_time']);
 
-		$can_time = strtotime($input['pick_up_time'])+$setting->time_period;
+		$can_time = strtotime($input['pick_up_time']) + $setting->time_period;
 		sleep($setting->time_period);
-		$cur_time=strtotime(date("H:i:s"));
+		$cur_time = strtotime(date("H:i:s"));
 
-		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/'.env('FIREBASE_KEY'));
+		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
-		
-		if($cur_time >= $can_time){
-			$driver_id = DB::table('driver_trips')->select('driver_id')->where('id',$booking_id)->first();			
-			if($driver_id->driver_id=='' || $driver_id->driver_id== NULL){
-				$update1 = ['customer_trips/' . $customer_id.'/Status' => 0,'customer_trips/' . $customer_id.'/Title' => ''];
+
+		if ($cur_time >= $can_time) {
+			$driver_id = DB::table('driver_trips')->select('driver_id')->where('id', $booking_id)->first();
+			if ($driver_id->driver_id == '' || $driver_id->driver_id == NULL) {
+				$update1 = ['customer_trips/' . $customer_id . '/Status' => 0, 'customer_trips/' . $customer_id . '/Title' => ''];
 				$newpost = $database->getReference()->update($update1);
 
 				$stat_upd = $database->getReference('drivers_trips');
 				$stat_up = $stat_upd->getValue();
-				
+
 				foreach ($stat_up as $k => $driver) {
-					$status_update = $database->getReference('drivers_trips'.'/'.$k)->getValue();
-					
-						if($status_update['BookingId'] == $booking_id){
-							//print_r($k);
-							$update2 = [
-								'drivers_trips/' . $k .'/Status' => '0',
-								'drivers_trips/' . $k .'/Title' => '',	
-							];
-							$st_up = $database->getReference()->update($update2);
-						}
-					
+					$status_update = $database->getReference('drivers_trips' . '/' . $k)->getValue();
+
+					if ($status_update['BookingId'] == $booking_id) {
+						//print_r($k);
+						$update2 = [
+							'drivers_trips/' . $k . '/Status' => '0',
+							'drivers_trips/' . $k . '/Title' => '',
+						];
+						$st_up = $database->getReference()->update($update2);
+					}
+
 				}
 
 				$response['message'] = "success";
-			}else{
+			} else {
 				$response['message'] = "failure";
 			}
 
-		}else{
+		} else {
 			$response['message'] = "failure";
 		}
 		return response()->json($response, 200);
 	}
-
 
 	public function addTrip(Request $request) {
 
@@ -820,15 +819,15 @@ class BookingController extends Controller {
 
 			if ($validator->fails()) {
 				return $this->sendError('Validation Error.' . $validator->errors());
-			}	
+			}
 
-			if($input['customer_id']!='0'){
+			if ($input['customer_id'] != '0') {
 				$customer = Customer::find($input['customer_id']);
-			
-				if($customer->status!=1){
-					$response['message']="Your account is blocked,kindly contact Admin";
+
+				if ($customer->status != 1) {
+					$response['message'] = "Your account is blocked,kindly contact Admin";
 					return $response;
-				}	
+				}
 			} else {
 				$customer = new Customer();
 				$customer->phone_number = isset($input['phone_num']) ? $input['phone_num'] : '0';
@@ -837,11 +836,11 @@ class BookingController extends Controller {
 				$customer->member_type = 'guest';
 				$customer->status = '1';
 				/*if($input['booking_id'] != 0){
-					$customer->update();
-				}else{
-				}*/
-					$customer->save();
-				
+						$customer->update();
+					}else{
+				*/
+				$customer->save();
+
 				$customer = Customer::find($customer->id);
 			}
 
@@ -854,14 +853,14 @@ class BookingController extends Controller {
 			$input['today_date'] = $ctime->toDateString();
 			$input['phone_num'] = $customer->phone_number;
 
-			$input['added_by'] = isset($input['added_by']) ?  $input['added_by'] : '0';
-			$input['send_OTP'] =  isset($input['send_OTP']) ?  $input['send_OTP'] : '1';
-			if($input['added_by']!='' && $input['added_by']!='0'){
-			  $input['RequestFrom'] = 'Admin';
-			  $input['RequestFromOtp'] = $input['send_OTP'];
+			$input['added_by'] = isset($input['added_by']) ? $input['added_by'] : '0';
+			$input['send_OTP'] = isset($input['send_OTP']) ? $input['send_OTP'] : '1';
+			if ($input['added_by'] != '' && $input['added_by'] != '0') {
+				$input['RequestFrom'] = 'Admin';
+				$input['RequestFromOtp'] = $input['send_OTP'];
 			} else {
-			  $input['RequestFrom'] = 'Normal';
-			  $input['RequestFromOtp'] = 1;	
+				$input['RequestFrom'] = 'Normal';
+				$input['RequestFromOtp'] = 1;
 			}
 
 			//$input['request_time'] = $ctime->toTimeString();
@@ -871,25 +870,25 @@ class BookingController extends Controller {
 
 			$service = VehicleCategory::where('id', $input['vehicle_id'])->first();
 			$input['vehicle_type'] = $service->vehicle_type;
-			$input['price_km'] = number_format($service->price_per_km,2);
+			$input['price_km'] = number_format($service->price_per_km, 2);
 			$input['customer_num'] = rand(0000, 9999);
 
 			$digits = 5;
 			$input['trip_num'] = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
-			if(isset($input['booking_id']) && $input['booking_id'] != 0){
+			if (isset($input['booking_id']) && $input['booking_id'] != 0) {
 				//unset($input['customer_email']);
 				//unset($input['customer_id']);
-				DriverTrip::where('id',$input['booking_id'])->update(['cus_id'=>$input['customer_id'], 'today_date'=>$input['today_date'], 'pick_up'=>$input['pick_up'], 'pick_up_time'=>$input['pick_up_time'], 'drop_location'=>$input['drop_location'], 'vehicle_type'=>$input['vehicle_type'], 'drop_lat'=>$input['drop_lat'], 'drop_lon'=>$input['drop_lon'], 'pickup_lat'=>$input['pickup_lat'], 'pickup_lon'=>$input['pickup_lon']]);
+				DriverTrip::where('id', $input['booking_id'])->update(['cus_id' => $input['customer_id'], 'today_date' => $input['today_date'], 'pick_up' => $input['pick_up'], 'pick_up_time' => $input['pick_up_time'], 'drop_location' => $input['drop_location'], 'vehicle_type' => $input['vehicle_type'], 'drop_lat' => $input['drop_lat'], 'drop_lon' => $input['drop_lon'], 'pickup_lat' => $input['pickup_lat'], 'pickup_lon' => $input['pickup_lon']]);
 
-				$id = DriverTrip::where('id',$input['booking_id'])->first();
+				$id = DriverTrip::where('id', $input['booking_id'])->first();
 				//$id = $input['booking_id'];
-			}else{
+			} else {
 				$id = DriverTrip::create($input);
 			}
-			
+
 			$input['booking_id'] = $id->id;
 
-			$customer->user_photo = env('IMG_URL') . $customer->user_photo;		// . 'storage/'    removed
+			$customer->user_photo = env('IMG_URL') . $customer->user_photo; // . 'storage/'    removed
 			$trimmed = str_replace('/public', '', $customer->user_photo);
 			$input['customer_profile'] = $trimmed;
 
@@ -906,23 +905,21 @@ class BookingController extends Controller {
 				if (count($driverList) > 0) {
 					$input['customer_avatar'] = ($customer->avatar != "" ? $customer->avatar : "");
 					/*$email = $customer->email;
-					$name = $customer->name;
-					$social_url=DB::table('settings')->first();
-					$skype=$social_url->skype;
-					$facebook=$social_url->facebook;
-					$twitter=$social_url->twitter;
-					$app_name=env("APP_NAME");
-					$from_mail=env("MAIL_USERNAME");
-					$website=$social_url->website_url;
-					$email_to=$social_url->mail_to;
-					$logo=$social_url->logo_url;
-					$admin_mail=$social_url->email;
-					$content=Email::select('content')->where('template_name', '=', 'Customer Trip Save')->first();
-					$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
+						$name = $customer->name;
+						$social_url=DB::table('settings')->first();
+						$skype=$social_url->skype;
+						$facebook=$social_url->facebook;
+						$twitter=$social_url->twitter;
+						$app_name=env("APP_NAME");
+						$from_mail=env("MAIL_USERNAME");
+						$website=$social_url->website_url;
+						$email_to=$social_url->mail_to;
+						$logo=$social_url->logo_url;
+						$admin_mail=$social_url->email;
+						$content=Email::select('content')->where('template_name', '=', 'Customer Trip Save')->first();
+						$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
 
-					$mail_header = array("name" => $name,'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,'content'=>$content);*/
-
-					
+					*/
 
 					$response['message'] = "Request sent";
 					/// Save data to firebase ///
@@ -939,9 +936,9 @@ class BookingController extends Controller {
 
 				} else {
 					// if($input['booking_id'] == 0){
-						$this->saveBookingInFirebase($input);
+					$this->saveBookingInFirebase($input);
 					// }
-					
+
 					$response['code'] = 200;
 					$response['message'] = "Driver is not available";
 				}
@@ -966,32 +963,32 @@ class BookingController extends Controller {
 				//'vehicle_type' => 'required',
 				'vehicle_id' => 'required',
 				'pick_up_time' => 'required',
-				
+
 			]);
 			if ($validator->fails()) {
 				return $this->sendError('Validation Error.' . $validator->errors());
 			}
-			
-			$input['ride_date'] = date('Y-m-d',strtotime($input['date']));
-			$pick_up_time = strtotime($input['ride_date'].' '.$input['pick_up_time']);
-			$curre_time = strtotime(date('Y-m-d H:i:s'))+(20*60);
 
-			if($pick_up_time <= $curre_time) {	
-				$response['result']	= null;			
+			$input['ride_date'] = date('Y-m-d', strtotime($input['date']));
+			$pick_up_time = strtotime($input['ride_date'] . ' ' . $input['pick_up_time']);
+			$curre_time = strtotime(date('Y-m-d H:i:s')) + (20 * 60);
+
+			if ($pick_up_time <= $curre_time) {
+				$response['result'] = null;
 				$response['message'] = 'Ride Time 20 mins';
 				return response()->json($response, 200);
 			}
-			$input['added_by'] = isset($input['added_by']) ?  $input['added_by'] : '0';
-			$input['send_OTP'] = isset($input['send_OTP']) ?  $input['send_OTP'] : '1';
-			if($input['added_by']!='' && $input['added_by']!='0'){
-			  $input['RequestFrom'] = 'Admin';
-			  $input['RequestFromOtp'] = $input['send_OTP'];	
+			$input['added_by'] = isset($input['added_by']) ? $input['added_by'] : '0';
+			$input['send_OTP'] = isset($input['send_OTP']) ? $input['send_OTP'] : '1';
+			if ($input['added_by'] != '' && $input['added_by'] != '0') {
+				$input['RequestFrom'] = 'Admin';
+				$input['RequestFromOtp'] = $input['send_OTP'];
 			} else {
-			  $input['RequestFrom'] = 'Normal';
-			  $input['RequestFromOtp'] = '1';		
+				$input['RequestFrom'] = 'Normal';
+				$input['RequestFromOtp'] = '1';
 			}
 
-			if(isset($input['driver_id'])){
+			if (isset($input['driver_id'])) {
 				$input['driver_id'] = '';
 			}
 
@@ -1002,23 +999,23 @@ class BookingController extends Controller {
 			$input['customer_lname'] = $customer->last_name;
 			$input['customer_email'] = $customer->email;
 			$new_time = date('H:i:s', strtotime($_REQUEST['pick_up_time']));
-			$input['ride_time'] = $input['date'].' '.date('H:i:s',strtotime('-5 minutes',strtotime($new_time)));
+			$input['ride_time'] = $input['date'] . ' ' . date('H:i:s', strtotime('-5 minutes', strtotime($new_time)));
 			$input['customer_phone_number'] = $customer->country . $customer->phone_number;
 			//$input['today_date'] = $ctime->toDateString();
 			$input['phone_num'] = $customer->phone_number;
 			//$input['request_time'] = $ctime->toTimeString();
 			$input['pick_up_time'] = $_REQUEST['pick_up_time'];
-			
+
 			$input['pick_time'] = $new_time;
-			$input['ride_date'] = date('Y-m-d',strtotime($input['date']));
-			$ctime = Carbon::now();		
-			$input['today_date'] = date('Y-m-d',strtotime($input['date']));
+			$input['ride_date'] = date('Y-m-d', strtotime($input['date']));
+			$ctime = Carbon::now();
+			$input['today_date'] = date('Y-m-d', strtotime($input['date']));
 			$input['status'] = 0; // Service request waiting
 			$input['cancel_service_status'] = 0;
 
 			$service = VehicleCategory::where('id', $input['vehicle_id'])->first();
 			$input['vehicle_type'] = $service->vehicle_type;
-			$input['price_km'] = number_format($service->price_per_km,2);
+			$input['price_km'] = number_format($service->price_per_km, 2);
 			$input['customer_num'] = rand(0000, 9999);
 
 			$digits = 5;
@@ -1026,7 +1023,7 @@ class BookingController extends Controller {
 			$id = DriverTrip::create($input);
 			$input['booking_id'] = $id->id;
 
-			$customer->user_photo = env('IMG_URL')  . $customer->user_photo;		//. 'storage/'    
+			$customer->user_photo = env('IMG_URL') . $customer->user_photo; //. 'storage/'
 			$trimmed = str_replace('/public', '', $customer->user_photo);
 			$input['customer_profile'] = $trimmed;
 
@@ -1088,9 +1085,9 @@ class BookingController extends Controller {
 				return $this->sendError('Validation Error.' . $validator->errors());
 			}
 			$pick_up_time = strtotime($input['pick_up_time']);
-			$curre_time = strtotime(date('H:i:s'))+(20*60);
-			if($pick_up_time <= $curre_time) {	
-				$response['result']	= null;		
+			$curre_time = strtotime(date('H:i:s')) + (20 * 60);
+			if ($pick_up_time <= $curre_time) {
+				$response['result'] = null;
 				$response['message'] = 'Ride Time 20 mins';
 				return response()->json($response, 200);
 			}
@@ -1106,9 +1103,9 @@ class BookingController extends Controller {
 				$trips->pickup_lon = isset($input['pickup_lon']) ? $input['pickup_lon'] : $trips->pickup_lon;
 				$trips->drop_lat = isset($input['drop_lat']) ? $input['drop_lat'] : $trips->drop_lat;
 				$trips->drop_lon = isset($input['drop_lon']) ? $input['drop_lon'] : $trips->drop_lon;
-				$ctime = Carbon::now();		
-				$trips->today_date = isset($input['date']) ? date('Y-m-d',strtotime($input['date'])) : $trips->today_date;
-				$trips->ride_date = isset($input['date']) ? date('Y-m-d',strtotime($input['date'])) : $trips->ride_date;
+				$ctime = Carbon::now();
+				$trips->today_date = isset($input['date']) ? date('Y-m-d', strtotime($input['date'])) : $trips->today_date;
+				$trips->ride_date = isset($input['date']) ? date('Y-m-d', strtotime($input['date'])) : $trips->ride_date;
 				$trips->update();
 				$data['customer_id'] = $trips->cus_id;
 				$data['service_status'] = 1;
@@ -1126,7 +1123,7 @@ class BookingController extends Controller {
 				$data['booking_id'] = $trips->id;
 				$data['today_date'] = $trips->today_date;
 				$data['ride_date'] = $trips->ride_date;
-				$data['ride_time'] = $trips->ride_date.' '.date('H:i:s',strtotime('-5 minutes',strtotime($trips->pick_time)));
+				$data['ride_time'] = $trips->ride_date . ' ' . date('H:i:s', strtotime('-5 minutes', strtotime($trips->pick_time)));
 				$this->updateFirebase($data);
 				$response['result'] = $data;
 				$response['message'] = "request updated";
@@ -1243,27 +1240,27 @@ class BookingController extends Controller {
 				$useremail = $username->email;
 				$name = $username->name;
 				//$otp = $username->otp;
-				$social_url=DB::table('settings')->first();
-				$skype=$social_url->skype;
-				$facebook=$social_url->facebook;
-				$twitter=$social_url->twitter;
-				$app_name=env("APP_NAME");
-				$from_mail=env("MAIL_USERNAME");
-				$website=$social_url->website_url;
-				$email_to=$social_url->mail_to;
-				$logo=$social_url->logo_url;
-				$admin_mail=$social_url->email;
+				$social_url = DB::table('settings')->first();
+				$skype = $social_url->skype;
+				$facebook = $social_url->facebook;
+				$twitter = $social_url->twitter;
+				$app_name = env("APP_NAME");
+				$from_mail = env("MAIL_USERNAME");
+				$website = $social_url->website_url;
+				$email_to = $social_url->mail_to;
+				$logo = $social_url->logo_url;
+				$admin_mail = $social_url->email;
 				/*$content=Email::select('content')->where('template_name', '=', 'Customer Trip Confirmation')->first();
-				
-				$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
-				$mail_header = array("name" => $name,'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,'content'=>$content);
-				Mail::send('mails.customerTripConfirm', $mail_header, function ($message)
-					 use ($useremail,$from_mail, $app_name) {
-						$message->from($from_mail, $app_name);
-						$message->subject('Trip Confirm');
-						$message->to($useremail);
 
-					});*/
+					$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
+					$mail_header = array("name" => $name,'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,'content'=>$content);
+					Mail::send('mails.customerTripConfirm', $mail_header, function ($message)
+						 use ($useremail,$from_mail, $app_name) {
+							$message->from($from_mail, $app_name);
+							$message->subject('Trip Confirm');
+							$message->to($useremail);
+
+				*/
 				//
 
 				///// driver email Trip notification details
@@ -1275,25 +1272,25 @@ class BookingController extends Controller {
 				$customer_name = $job->customer_name;
 				$driver_id = $job->driver_id;
 				$driver_name = $username1->name;
-				
-				$booking_id = $job->id;
-				$content=Email::select('content')->where('template_name', '=', 'Driver Trip Notification')->first();
-			    $content=str_replace("{{env('APP_NAME')}}", $app_name,$content->content);
 
-				$mail_header = array("name" => $name, 'customer_id' => $customer_id, 'customer_name' => $customer_name, 'driver_id' => $driver_id, 'driver_name' => $driver_name, 'booking_id' => $job->id,'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,'content'=>$content);
+				$booking_id = $job->id;
+				$content = Email::select('content')->where('template_name', '=', 'Driver Trip Notification')->first();
+				$content = str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
+
+				$mail_header = array("name" => $name, 'customer_id' => $customer_id, 'customer_name' => $customer_name, 'driver_id' => $driver_id, 'driver_name' => $driver_name, 'booking_id' => $job->id, 'skype' => $skype, 'facebook' => $facebook, 'twitter' => $twitter, 'website' => $website, 'email_to' => $email_to, 'logo' => $logo, 'app_name' => $app_name, 'admin_mail' => $admin_mail, 'content' => $content);
 
 				Mail::send('mails.driverTripNotification', $mail_header, function ($message)
-					use ($driveremail,$from_mail, $app_name) {
-					  $message->from($from_mail, $app_name);
-					  $message->subject('Trip Notification');
-					  $message->to($driveremail);
-				});
+					 use ($driveremail, $from_mail, $app_name) {
+						$message->from($from_mail, $app_name);
+						$message->subject('Trip Notification');
+						$message->to($driveremail);
+					});
 				////customer trip Notification Details
-				$content=Email::select('content')->where('template_name', '=', 'Customer Trip Notification')->first();
-				$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
-				$mail_header = array("customer_name" => $customer_name, 'customer_id' => $customer_id, 'customer_name' => $customer_name, 'driver_id' => $driver_id, 'driver_name' => $driver_name, 'booking_id' => $job->id,'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,'content'=>$content);
+				$content = Email::select('content')->where('template_name', '=', 'Customer Trip Notification')->first();
+				$content = str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
+				$mail_header = array("customer_name" => $customer_name, 'customer_id' => $customer_id, 'customer_name' => $customer_name, 'driver_id' => $driver_id, 'driver_name' => $driver_name, 'booking_id' => $job->id, 'skype' => $skype, 'facebook' => $facebook, 'twitter' => $twitter, 'website' => $website, 'email_to' => $email_to, 'logo' => $logo, 'app_name' => $app_name, 'admin_mail' => $admin_mail, 'content' => $content);
 				Mail::send('mails.customerTripNotification', $mail_header, function ($message)
-					 use ($useremail,$from_mail, $app_name) {
+					 use ($useremail, $from_mail, $app_name) {
 						$message->from($from_mail, $app_name);
 						$message->subject('Trip Notification');
 						$message->to($useremail);
@@ -1309,7 +1306,7 @@ class BookingController extends Controller {
 				$data['driver_name'] = $username1->name;
 				$data['driver_lname'] = $username1->last_name;
 
-				$username1->photo = env('IMG_URL')  . $username1->photo;
+				$username1->photo = env('IMG_URL') . $username1->photo;
 				$trimmed = str_replace('/public', '', $username1->photo);
 				$data['profile_pic'] = $trimmed;
 
@@ -1372,7 +1369,7 @@ class BookingController extends Controller {
 					$data['vehicle_id'] = $job->vehicle_id;
 					$this->TimeoutUpdate($data);
 					$message['error'] = 'Not saved.';
-					
+
 					$response['message'] = $message;
 					return response()->json($response, 200);
 				}
@@ -1449,16 +1446,16 @@ class BookingController extends Controller {
 			$job->drop_lat = isset($input['drop_lat']) ? $input['drop_lat'] : $job->drop_lat;
 			$job->drop_lon = isset($input['drop_lon']) ? $input['drop_lon'] : $job->drop_lon;
 
-			$total_distance = isset($input['total_distance']) ? $input['total_distance'] :0;
+			$total_distance = isset($input['total_distance']) ? $input['total_distance'] : 0;
 			/*$kmArr = explode(" ", $total_distance);
-			if (count($kmArr) > 1) {
-				if (isset($kmArr[1]) && strtolower($kmArr[1]) == "m") {
-					$job->total_distance = $kmArr[0] / 1000;
-				} else {
-					$job->total_distance = $kmArr[0];
-				}
-			}*/
-			$job->total_distance=round($total_distance,3);
+				if (count($kmArr) > 1) {
+					if (isset($kmArr[1]) && strtolower($kmArr[1]) == "m") {
+						$job->total_distance = $kmArr[0] / 1000;
+					} else {
+						$job->total_distance = $kmArr[0];
+					}
+			*/
+			$job->total_distance = round($total_distance, 3);
 			//	$job->total_distance = isset($input['total_distance']) ? $input['total_distance'] :$job->total_distance;
 
 			$job->drop_location = isset($input['drop_location']) ? $input['drop_location'] : $job->drop_location;
@@ -1467,9 +1464,9 @@ class BookingController extends Controller {
 			$base = VehicleCategory::where('vehicle_type', $vehicle_type)->first();
 			$base_fare = $base->base_fare;
 			$price_per_km = $base->price_per_km;
-			$total_cost= $job->total_distance * $price_per_km;
-			$total_amount=$total_cost+$base_fare;
-			
+			$total_cost = $job->total_distance * $price_per_km;
+			$total_amount = $total_cost + $base_fare;
+
 			$job->total_amount = $total_amount;
 			if ($job->save()) {
 				$response = [
@@ -1484,10 +1481,10 @@ class BookingController extends Controller {
 				$data['total_amount'] = $total_amount;
 				$data['base_fare'] = $base_fare;
 				$data['price_per_km'] = $price_per_km;
-				$data['total_distance'] = round($input['total_distance'],3);
+				$data['total_distance'] = round($input['total_distance'], 3);
 				$data['drop_location'] = $job->drop_location;
 				$data['vehicle_type'] = $vehicle_type;
-				$data['distance']=isset($input['distance'])?$input['distance']:0;
+				$data['distance'] = isset($input['distance']) ? $input['distance'] : 0;
 				$this->updateFirebase($data);
 				return response()->json($response, 200);
 			} else {
@@ -1515,14 +1512,14 @@ class BookingController extends Controller {
 				$job->payment_status = "1";
 				$job->payment_name = "cash";
 				$job->status = 6;
-				$total_amount=$job->total_amount;
-				$commission_percent=VehicleCategory::where('id',$job->vehicle_id)->first();
-				$commission_percentage=$commission_percent->commission_percentage;
-				$commission=$total_amount*$commission_percentage;
-				$total_commission=$commission/100;
-				$job->commission=$total_commission;
-				$driver=Driver::where('id',$input['driver_id'])->first();
-				$driver->wallet=$driver->wallet-$total_commission;
+				$total_amount = $job->total_amount;
+				$commission_percent = VehicleCategory::where('id', $job->vehicle_id)->first();
+				$commission_percentage = $commission_percent->commission_percentage;
+				$commission = $total_amount * $commission_percentage;
+				$total_commission = $commission / 100;
+				$job->commission = $total_commission;
+				$driver = Driver::where('id', $input['driver_id'])->first();
+				$driver->wallet = $driver->wallet - $total_commission;
 				$driver->save();
 				$job->save();
 			} elseif ($input['payment_type'] == 'paypal') {
@@ -1530,15 +1527,15 @@ class BookingController extends Controller {
 				$job->payment_name = "paypal";
 				$job->status = 6;
 				$job->paypal_id = $input['paypal_id'];
-				$total_amount=$job->total_amount;
-				$commission_percent=VehicleCategory::where('id',$job->vehicle_id)->first();
-				$commission_percentage=$commission_percent->commission_percentage;
-				$commission=$total_amount*$commission_percentage;
-				$total_commission=$commission/100;
-				$job->commission=$total_commission;
-				$total=$total_amount-$total_commission;
-				$driver=Driver::where('id',$input['driver_id'])->first();
-				$driver->wallet=$driver->wallet+$total;
+				$total_amount = $job->total_amount;
+				$commission_percent = VehicleCategory::where('id', $job->vehicle_id)->first();
+				$commission_percentage = $commission_percent->commission_percentage;
+				$commission = $total_amount * $commission_percentage;
+				$total_commission = $commission / 100;
+				$job->commission = $total_commission;
+				$total = $total_amount - $total_commission;
+				$driver = Driver::where('id', $input['driver_id'])->first();
+				$driver->wallet = $driver->wallet + $total;
 				$driver->save();
 				$job->save();
 			}
@@ -1568,25 +1565,25 @@ class BookingController extends Controller {
 				$driver_id = $job->driver_id;
 				$driver_name = $usernameDriver->name;
 				$booking_id = $job->id;
-				$total = round($job->total_amount,2);
+				$total = round($job->total_amount, 2);
 
-				$social_url=DB::table('settings')->first();
-				$skype=$social_url->skype;
-				$facebook=$social_url->facebook;
-				$twitter=$social_url->twitter;
-				$app_name=env("APP_NAME");
-				$from_mail=env("MAIL_USERNAME");
-				$website=$social_url->website_url;
-				$email_to=$social_url->mail_to;
-				$logo=$social_url->logo_url;
-				$admin_mail=$social_url->email;
-				$content=Email::select('content')->where('template_name', '=', 'Customer Trip Complete')->first();
-				$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
+				$social_url = DB::table('settings')->first();
+				$skype = $social_url->skype;
+				$facebook = $social_url->facebook;
+				$twitter = $social_url->twitter;
+				$app_name = env("APP_NAME");
+				$from_mail = env("MAIL_USERNAME");
+				$website = $social_url->website_url;
+				$email_to = $social_url->mail_to;
+				$logo = $social_url->logo_url;
+				$admin_mail = $social_url->email;
+				$content = Email::select('content')->where('template_name', '=', 'Customer Trip Complete')->first();
+				$content = str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
 				$curr = AppSetting::select('currency')->first();
 				$currency = Currency::select('currency', 'symbol')->where('id', $curr->currency)->first();
-				$mail_header = array("name" => $name, 'customer_id' => $customer_id, 'driver_id' => $driver_id, 'driver_name' => $driver_name, 'booking_id' => $booking_id, 'total' => round($job->total_amount,2),'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,'content'=>$content,'currency'=>$currency->symbol);
+				$mail_header = array("name" => $name, 'customer_id' => $customer_id, 'driver_id' => $driver_id, 'driver_name' => $driver_name, 'booking_id' => $booking_id, 'total' => round($job->total_amount, 2), 'skype' => $skype, 'facebook' => $facebook, 'twitter' => $twitter, 'website' => $website, 'email_to' => $email_to, 'logo' => $logo, 'app_name' => $app_name, 'admin_mail' => $admin_mail, 'content' => $content, 'currency' => $currency->symbol);
 				Mail::send('mails.customerTripComplete', $mail_header, function ($message)
-					 use ($useremail,$from_mail, $app_name) {
+					 use ($useremail, $from_mail, $app_name) {
 						$message->from($from_mail, $app_name);
 						$message->subject('Trip Complete');
 						$message->to($useremail);
@@ -1594,24 +1591,24 @@ class BookingController extends Controller {
 					});
 				/////
 				/////////Driver Trip Complete
-				$social_url=DB::table('settings')->first();
-				$skype=$social_url->skype;
-				$facebook=$social_url->facebook;
-				$twitter=$social_url->twitter;
-				$app_name=env("APP_NAME");
-				$from_mail=env("MAIL_USERNAME");
-				$website=$social_url->website_url;
-				$email_to=$social_url->mail_to;
-				$logo=$social_url->logo_url;
-				$admin_mail=$social_url->email;
+				$social_url = DB::table('settings')->first();
+				$skype = $social_url->skype;
+				$facebook = $social_url->facebook;
+				$twitter = $social_url->twitter;
+				$app_name = env("APP_NAME");
+				$from_mail = env("MAIL_USERNAME");
+				$website = $social_url->website_url;
+				$email_to = $social_url->mail_to;
+				$logo = $social_url->logo_url;
+				$admin_mail = $social_url->email;
 				$driveremail = $usernameDriver->email;
-				$content=Email::select('content')->where('template_name', '=', 'Driver Trip Complete')->first();
-				$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
+				$content = Email::select('content')->where('template_name', '=', 'Driver Trip Complete')->first();
+				$content = str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
 				$curr = AppSetting::select('currency')->first();
 				$currency = Currency::select('currency', 'symbol')->where('id', $curr->currency)->first();
-				$mail_header = array("driver_name" => $driver_name, 'customer_name' => $name, 'customer_id' => $customer_id, 'driver_id' => $driver_id, 'driver_name' => $driver_name, 'booking_id' => $booking_id, 'total' => round($job->total_amount,2),'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,'content'=>$content,'currency'=>$currency->symbol);
+				$mail_header = array("driver_name" => $driver_name, 'customer_name' => $name, 'customer_id' => $customer_id, 'driver_id' => $driver_id, 'driver_name' => $driver_name, 'booking_id' => $booking_id, 'total' => round($job->total_amount, 2), 'skype' => $skype, 'facebook' => $facebook, 'twitter' => $twitter, 'website' => $website, 'email_to' => $email_to, 'logo' => $logo, 'app_name' => $app_name, 'admin_mail' => $admin_mail, 'content' => $content, 'currency' => $currency->symbol);
 				Mail::send('mails.driverTripComplete', $mail_header, function ($message)
-					 use ($driveremail,$from_mail, $app_name) {
+					 use ($driveremail, $from_mail, $app_name) {
 						$message->from($from_mail, $app_name);
 						$message->subject('Trip Complete');
 						$message->to($driveremail);
@@ -1656,7 +1653,7 @@ class BookingController extends Controller {
 				// $data['cancel_status']=1;
 				// $data['drop_time']=$ctime->toTimeString();;
 				// $this->updateFirebase($data);
-				$this->driverStatusCancel($input['booking_id'],$input['category_id']);
+				$this->driverStatusCancel($input['booking_id'], $input['category_id']);
 			} else {
 				$message['code'] = 500;
 				$message['error'] = 'Not saved.';
@@ -1802,14 +1799,14 @@ class BookingController extends Controller {
 		}
 	}
 
-	public function admin_assign(Request $request){
+	public function admin_assign(Request $request) {
 
 		$input = $request->all();
 		$ctime = Carbon::now();
 		$ctime->toTimeString();
 
-		if($input['mode']=='ridenow'){
-		
+		if ($input['mode'] == 'ridenow') {
+
 			$validator = Validator::make($input, [
 				'customer_id' => 'required',
 				'pick_up' => 'required',
@@ -1820,34 +1817,34 @@ class BookingController extends Controller {
 				'drop_lon' => 'required',
 				'mode' => 'required',
 				'vehicle_id' => 'required',
-				'driver_id' => 'required'
+				'driver_id' => 'required',
 			]);
 
-			if($validator->fails()){
+			if ($validator->fails()) {
 				return $this->sendError('Validation Error.' . $validator->errors());
 			}
 
 			$customer = Customer::find($input['customer_id']);
-			
-			if($customer->status!=1) {
-				$response['message']="Your account is blocked,kindly contact Admin";
+
+			if ($customer->status != 1) {
+				$response['message'] = "Your account is blocked,kindly contact Admin";
 				return response()->json($response, 200);
 			}
 
 			$drive = Driver::find($input['driver_id']);
-	
-			if($drive->status!=1) {
-				$response['message']="Driver account is blocked,kindly contact Admin";
+
+			if ($drive->status != 1) {
+				$response['message'] = "Driver account is blocked,kindly contact Admin";
 				return response()->json($response, 200);
 			}
 
-			$drive_check = DriverCheckin::where('driver_id',$input['driver_id'])->first();
-			
-			if($drive_check->checkin_status!=1) {
-				$response['message']="This driver is check out recently";
+			$drive_check = DriverCheckin::where('driver_id', $input['driver_id'])->first();
+
+			if ($drive_check->checkin_status != 1) {
+				$response['message'] = "This driver is check out recently";
 				return response()->json($response, 200);
-			} else if($drive_check->booking_status==1){
-				$response['message']="This driver is currently on trip";
+			} else if ($drive_check->booking_status == 1) {
+				$response['message'] = "This driver is currently on trip";
 				return response()->json($response, 200);
 			}
 
@@ -1860,26 +1857,26 @@ class BookingController extends Controller {
 			$input['today_date'] = $ctime->toDateString();
 			$input['phone_num'] = $customer->phone_number;
 
-			$input['added_by'] = isset($input['added_by']) ?  $input['added_by'] : '0';
+			$input['added_by'] = isset($input['added_by']) ? $input['added_by'] : '0';
 
 			$input['RequestFrom'] = 'Admin';
-			$input['send_OTP'] = isset($input['send_OTP']) ?  $input['send_OTP'] : '1';
+			$input['send_OTP'] = isset($input['send_OTP']) ? $input['send_OTP'] : '1';
 
 			$input['pick_up_time'] = $ctime->toTimeString();
 			$input['status'] = 1;
 			$input['cancel_service_status'] = 0;
 			$service = VehicleCategory::where('id', $input['vehicle_id'])->first();
 			$input['vehicle_type'] = $service->vehicle_type;
-			$input['price_km'] = number_format($service->price_per_km,2);
+			$input['price_km'] = number_format($service->price_per_km, 2);
 			$input['customer_num'] = rand(0000, 9999);
 
 			$digits = 5;
 			$input['trip_num'] = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
-			if($input['booking_id'] != 0){
-				DriverTrip::where('id',$input['booking_id'])->update(['cus_id'=>$input['customer_id'], 'today_date'=>$input['today_date'], 'pick_up'=>$input['pick_up'], 'pick_up_time'=>$input['pick_up_time'], 'drop_location'=>$input['drop_location'], 'vehicle_type'=>$input['vehicle_type'], 'drop_lat'=>$input['drop_lat'], 'drop_lon'=>$input['drop_lon'], 'pickup_lat'=>$input['pickup_lat'], 'pickup_lon'=>$input['pickup_lon']]);
+			if ($input['booking_id'] != 0) {
+				DriverTrip::where('id', $input['booking_id'])->update(['cus_id' => $input['customer_id'], 'today_date' => $input['today_date'], 'pick_up' => $input['pick_up'], 'pick_up_time' => $input['pick_up_time'], 'drop_location' => $input['drop_location'], 'vehicle_type' => $input['vehicle_type'], 'drop_lat' => $input['drop_lat'], 'drop_lon' => $input['drop_lon'], 'pickup_lat' => $input['pickup_lat'], 'pickup_lon' => $input['pickup_lon']]);
 
-				$id = DriverTrip::where('id',$input['booking_id'])->first();
-			}else{
+				$id = DriverTrip::where('id', $input['booking_id'])->first();
+			} else {
 				$id = DriverTrip::create($input);
 			}
 			$input['booking_id'] = $id->id;
@@ -1889,7 +1886,7 @@ class BookingController extends Controller {
 			$input['customer_profile'] = $trimmed;
 
 			$job = DriverTrip::where('id', $input['booking_id'])->first();
-			
+
 			if (!is_object($job)) {
 				$response['message'] = 'failure';
 				return $response;
@@ -1907,7 +1904,7 @@ class BookingController extends Controller {
 			$driver = Driver::find($input['driver_id']);
 			$job->driver_name = $driver->name;
 			$job->driver_lname = $driver->last_name;
-			
+
 			$checkin = DriverCheckin::where('driver_id', $input['driver_id'])->first();
 			$checkin->booking_status = 1;
 			$checkin->update();
@@ -1918,27 +1915,27 @@ class BookingController extends Controller {
 					'result' => $input,
 					'message' => "Trip Accept",
 				];
-			
+
 				$username = Customer::select('name', 'email')->where('id', '=', $job->cus_id)->first();
 				$useremail = $username->email;
 				$name = $username->name;
 				//$otp = $username->otp;
-				$social_url=DB::table('settings')->first();
-				$skype=$social_url->skype;
-				$facebook=$social_url->facebook;
-				$twitter=$social_url->twitter;
-				$app_name=env("APP_NAME");
-				$from_mail=env("MAIL_USERNAME");
-				$website=$social_url->website_url;
-				$email_to=$social_url->mail_to;
-				$logo=$social_url->logo_url;
-				$admin_mail=$social_url->email;
-				$content=Email::select('content')->where('template_name', '=', 'Customer Trip Confirmation')->first();
-				
-				$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
-				$mail_header = array("name" => $name,'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,'content'=>$content);
+				$social_url = DB::table('settings')->first();
+				$skype = $social_url->skype;
+				$facebook = $social_url->facebook;
+				$twitter = $social_url->twitter;
+				$app_name = env("APP_NAME");
+				$from_mail = env("MAIL_USERNAME");
+				$website = $social_url->website_url;
+				$email_to = $social_url->mail_to;
+				$logo = $social_url->logo_url;
+				$admin_mail = $social_url->email;
+				$content = Email::select('content')->where('template_name', '=', 'Customer Trip Confirmation')->first();
+
+				$content = str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
+				$mail_header = array("name" => $name, 'skype' => $skype, 'facebook' => $facebook, 'twitter' => $twitter, 'website' => $website, 'email_to' => $email_to, 'logo' => $logo, 'app_name' => $app_name, 'admin_mail' => $admin_mail, 'content' => $content);
 				Mail::send('mails.customerTripConfirm', $mail_header, function ($message)
-					 use ($useremail,$from_mail, $app_name) {
+					 use ($useremail, $from_mail, $app_name) {
 						$message->from($from_mail, $app_name);
 						$message->subject('Trip Confirm');
 						$message->to($useremail);
@@ -1954,23 +1951,23 @@ class BookingController extends Controller {
 				$driver_id = $job->driver_id;
 				$driver_name = $username1->name;
 				$booking_id = $job->id;
-				$social_url=DB::table('settings')->first();
-				$skype=$social_url->skype;
-				$facebook=$social_url->facebook;
-				$twitter=$social_url->twitter;
-				$app_name=env("APP_NAME");
-				$from_mail=env("MAIL_USERNAME");
-				$website=$social_url->website_url;
-				$email_to=$social_url->mail_to;
-				$logo=$social_url->logo_url;
-				$admin_mail=$social_url->email;
-				
-				$content=Email::select('content')->where('template_name', '=', 'Driver Trip Notification')->first();
-				$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
+				$social_url = DB::table('settings')->first();
+				$skype = $social_url->skype;
+				$facebook = $social_url->facebook;
+				$twitter = $social_url->twitter;
+				$app_name = env("APP_NAME");
+				$from_mail = env("MAIL_USERNAME");
+				$website = $social_url->website_url;
+				$email_to = $social_url->mail_to;
+				$logo = $social_url->logo_url;
+				$admin_mail = $social_url->email;
 
-				$mail_header = array("name" => $name, 'customer_id' => $customer_id, 'customer_name' => $customer_name, 'driver_id' => $driver_id, 'driver_name' => $driver_name, 'booking_id' => $job->id,'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,'content'=>$content);
+				$content = Email::select('content')->where('template_name', '=', 'Driver Trip Notification')->first();
+				$content = str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
+
+				$mail_header = array("name" => $name, 'customer_id' => $customer_id, 'customer_name' => $customer_name, 'driver_id' => $driver_id, 'driver_name' => $driver_name, 'booking_id' => $job->id, 'skype' => $skype, 'facebook' => $facebook, 'twitter' => $twitter, 'website' => $website, 'email_to' => $email_to, 'logo' => $logo, 'app_name' => $app_name, 'admin_mail' => $admin_mail, 'content' => $content);
 				Mail::send('mails.driverTripNotification', $mail_header, function ($message)
-					 use ($driveremail,$from_mail, $app_name) {
+					 use ($driveremail, $from_mail, $app_name) {
 						$message->from($from_mail, $app_name);
 						$message->subject('Trip Notification');
 						$message->to($driveremail);
@@ -1978,53 +1975,53 @@ class BookingController extends Controller {
 					});
 				////
 				////customer trip Notification Details
-				$social_url=DB::table('settings')->first();
-				$skype=$social_url->skype;
-				$facebook=$social_url->facebook;
-				$twitter=$social_url->twitter;
-				$app_name=env("APP_NAME");
-				$from_mail=env("MAIL_USERNAME");
-				$website=$social_url->website_url;
-				$email_to=$social_url->mail_to;
-				$logo=$social_url->logo_url;
-				$admin_mail=$social_url->email;
-				$content=Email::select('content')->where('template_name', '=', 'Customer Trip Notification')->first();
-				$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
-				$mail_header = array("customer_name" => $customer_name, 'customer_id' => $customer_id, 'customer_name' => $customer_name, 'driver_id' => $driver_id, 'driver_name' => $driver_name, 'booking_id' => $job->id,'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,'content'=>$content);
+				$social_url = DB::table('settings')->first();
+				$skype = $social_url->skype;
+				$facebook = $social_url->facebook;
+				$twitter = $social_url->twitter;
+				$app_name = env("APP_NAME");
+				$from_mail = env("MAIL_USERNAME");
+				$website = $social_url->website_url;
+				$email_to = $social_url->mail_to;
+				$logo = $social_url->logo_url;
+				$admin_mail = $social_url->email;
+				$content = Email::select('content')->where('template_name', '=', 'Customer Trip Notification')->first();
+				$content = str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
+				$mail_header = array("customer_name" => $customer_name, 'customer_id' => $customer_id, 'customer_name' => $customer_name, 'driver_id' => $driver_id, 'driver_name' => $driver_name, 'booking_id' => $job->id, 'skype' => $skype, 'facebook' => $facebook, 'twitter' => $twitter, 'website' => $website, 'email_to' => $email_to, 'logo' => $logo, 'app_name' => $app_name, 'admin_mail' => $admin_mail, 'content' => $content);
 				Mail::send('mails.customerTripNotification', $mail_header, function ($message)
-					 use ($useremail,$from_mail, $app_name) {
+					 use ($useremail, $from_mail, $app_name) {
 						$message->from($from_mail, $app_name);
 						$message->subject('Trip Notification');
 						$message->to($useremail);
 
 					});
 				/////
-				
+
 				////customer Dispatch Booking OTP
 
-				if($input['send_OTP']==1){
-				$social_url=DB::table('settings')->first();
-				$skype=$social_url->skype;
-				$facebook=$social_url->facebook;
-				$twitter=$social_url->twitter;
-				$app_name=env("APP_NAME");
-				$from_mail=env("MAIL_USERNAME");
-				$website=$social_url->website_url;
-				$email_to=$social_url->mail_to;
-				$logo=$social_url->logo_url;
-				$admin_mail=$social_url->email;
-				
-				$content=Email::select('content')->where('template_name', '=', 'Customer Trip Start - OTP')->first();
-				$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
-				$mail_header = array("customer_name" => $customer_name, 'customer_id' => $customer_id, 'customer_name' => $customer_name, 'driver_id' => $driver_id, 'driver_name' => $driver_name, 'booking_id' => $job->id,'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,'content'=>$content,'otp'=>$job->trip_num);
-				Mail::send('mails.customerTripStartOTP', $mail_header, function ($message)
-					 use ($useremail,$from_mail, $app_name) {
-						$message->from($from_mail, $app_name);
-						$message->subject('OTP - Trip Start');
-						$message->to($useremail);
+				if ($input['send_OTP'] == 1) {
+					$social_url = DB::table('settings')->first();
+					$skype = $social_url->skype;
+					$facebook = $social_url->facebook;
+					$twitter = $social_url->twitter;
+					$app_name = env("APP_NAME");
+					$from_mail = env("MAIL_USERNAME");
+					$website = $social_url->website_url;
+					$email_to = $social_url->mail_to;
+					$logo = $social_url->logo_url;
+					$admin_mail = $social_url->email;
 
-					});
-				}	
+					$content = Email::select('content')->where('template_name', '=', 'Customer Trip Start - OTP')->first();
+					$content = str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
+					$mail_header = array("customer_name" => $customer_name, 'customer_id' => $customer_id, 'customer_name' => $customer_name, 'driver_id' => $driver_id, 'driver_name' => $driver_name, 'booking_id' => $job->id, 'skype' => $skype, 'facebook' => $facebook, 'twitter' => $twitter, 'website' => $website, 'email_to' => $email_to, 'logo' => $logo, 'app_name' => $app_name, 'admin_mail' => $admin_mail, 'content' => $content, 'otp' => $job->trip_num);
+					Mail::send('mails.customerTripStartOTP', $mail_header, function ($message)
+						 use ($useremail, $from_mail, $app_name) {
+							$message->from($from_mail, $app_name);
+							$message->subject('OTP - Trip Start');
+							$message->to($useremail);
+
+						});
+				}
 				/////
 
 				$data['booking_id'] = $job->id;
@@ -2036,7 +2033,7 @@ class BookingController extends Controller {
 				$data['driver_lname'] = $username1->last_name;
 
 				$input['service_status'] = 2;
-				$username1->photo = env('IMG_URL')  . $username1->photo;
+				$username1->photo = env('IMG_URL') . $username1->photo;
 				$trimmed = str_replace('/public', '', $username1->photo);
 				$data['profile_pic'] = $trimmed;
 
@@ -2050,7 +2047,7 @@ class BookingController extends Controller {
 					->avg('driver_rating');
 				$avg_rating = round($rating, 1);
 				$data['rating'] = $avg_rating;
-				$this->updateadminFirebase($input);	
+				$this->updateadminFirebase($input);
 				$this->updateFirebase($data);
 				$this->deleteFirebase($input['booking_id']);
 				return response()->json($response, 200);
@@ -2062,29 +2059,29 @@ class BookingController extends Controller {
 		}
 
 	}
-	public function driverStatusCancel($booking_id='',$category_id=''){
-			$serviceAccount = ServiceAccount::fromJsonFile(public_path() .'/'. env('FIREBASE_KEY'));
-			$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
-			$database = $firebase->getDatabase();			
-			$stat_upd = $database->getReference('drivers_location'.'/'.$category_id);
-			$stat_up = $stat_upd->getValue();
-			
-			foreach ($stat_up as $k => $driver) {
-				$status_update = $database->getReference('drivers_trips'.'/'.$k)->getValue();
-				
-					if($status_update['BookingId'] == $booking_id){
-						//print_r($k);
-						$update1 = [
-							'drivers_trips/' . $k .'/Status' => '0',
-						];
-						$st_up = $database->getReference()->update($update1);
-					}
-				
+	public function driverStatusCancel($booking_id = '', $category_id = '') {
+		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
+		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
+		$database = $firebase->getDatabase();
+		$stat_upd = $database->getReference('drivers_location' . '/' . $category_id);
+		$stat_up = $stat_upd->getValue();
+
+		foreach ($stat_up as $k => $driver) {
+			$status_update = $database->getReference('drivers_trips' . '/' . $k)->getValue();
+
+			if ($status_update['BookingId'] == $booking_id) {
+				//print_r($k);
+				$update1 = [
+					'drivers_trips/' . $k . '/Status' => '0',
+				];
+				$st_up = $database->getReference()->update($update1);
 			}
+
+		}
 		return TRUE;
 	}
 	protected function saveFirebase($input, $chk) {
-		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/'.env('FIREBASE_KEY'));
+		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
 		$appsetting = AppSetting::first();
@@ -2097,7 +2094,7 @@ class BookingController extends Controller {
 			$resultqa['Profile'] = $input['customer_profile'];
 			$resultqa['CustomerName'] = $input['customer_name'];
 			$resultqa['CustomerLastName'] = $input['customer_lname'];
-			$resultqa['PhoneNumber'] = isset($input['phone_num']) ?  $input['phone_num'] : '""';
+			$resultqa['PhoneNumber'] = isset($input['phone_num']) ? $input['phone_num'] : '""';
 			$resultqa['DriverPhoneNumber'] = $driver['phone_number'];
 			$resultqa['DriverName'] = $driver['name'];
 			$resultqa['DriverLastName'] = $driver['last_name'];
@@ -2109,11 +2106,11 @@ class BookingController extends Controller {
 			$resultqa['DropLongitude'] = $input['drop_lon'];
 			$resultqa['CreatedTime'] = date('d/m/y H:i:s');
 			$resultqa['RequestFrom'] = $input['RequestFrom'];
-			$resultqa['RequestFromOtp'] = isset($input['send_OTP']) ?  $input['send_OTP'] : '1';
+			$resultqa['RequestFromOtp'] = isset($input['send_OTP']) ? $input['send_OTP'] : '1';
 			$resultpa['Status'] = 1;
-			if($driver['device_id']!='0' && $driver['device_id']!=''){
+			if ($driver['device_id'] != '0' && $driver['device_id'] != '') {
 				$resultss = $this->sendFCMDriver($driver['device_id'], "Customer request for service");
-			}	
+			}
 
 			$update1 = [
 				'drivers_trips/' . $driver['id'] => $resultqa,
@@ -2131,7 +2128,7 @@ class BookingController extends Controller {
 	}
 
 	protected function saveFirebaseCronCus($input, $cus_id) {
-		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/'.env('FIREBASE_KEY'));
+		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
 		$appsetting = AppSetting::first();
@@ -2162,7 +2159,7 @@ class BookingController extends Controller {
 	}
 
 	protected function saveFirebaseCron($input, $input1, $cus_id, $driver_id) {
-		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/'.env('FIREBASE_KEY'));
+		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
 		$appsetting = AppSetting::first();
@@ -2184,7 +2181,7 @@ class BookingController extends Controller {
 	}
 
 	protected function scheduleSaveFirebase($input) {
-		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/'.env('FIREBASE_KEY'));
+		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
 		$appsetting = AppSetting::first();
@@ -2224,7 +2221,7 @@ class BookingController extends Controller {
 	}
 
 	protected function updateFirebase($data) {
-		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/'.env('FIREBASE_KEY'));
+		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
 		if ($data['service_status'] == 3) {
@@ -2232,11 +2229,11 @@ class BookingController extends Controller {
 
 			$update = array('Status' => $data['service_status']);
 			/*$update1 = [
-				'customer_trips/' . $data['customer_id'] . '/Status' => $data['service_status'],
-			];
-			$updates = [
-				'drivers_trips/' . $data['driver_id'] . '/Status' => $data['service_status'],
-			];*/
+					'customer_trips/' . $data['customer_id'] . '/Status' => $data['service_status'],
+				];
+				$updates = [
+					'drivers_trips/' . $data['driver_id'] . '/Status' => $data['service_status'],
+			*/
 			$newpost = $database->getReference('customer_trips/' . $data['customer_id'])
 				->update($update);
 
@@ -2254,7 +2251,7 @@ class BookingController extends Controller {
 				'DropLongitude' => $data['drop_lon'],
 				'PickupLatitude' => $data['pickup_lat'],
 				'PickupLongitude' => $data['pickup_lon'],
-				'PickupTime' => $data['pick_up_time']
+				'PickupTime' => $data['pick_up_time'],
 			);
 
 			/*$update1 = [
@@ -2286,7 +2283,7 @@ class BookingController extends Controller {
 				'TotalDistance' => $data['total_distance'],
 				'Distance' => $data['distance'],
 				'DropLocation' => $data['drop_location'],
-				'CashStatus' => '0'
+				'CashStatus' => '0',
 			);
 
 			$newpost = $database->getReference('customer_trips/' . $data['customer_id'])
@@ -2320,8 +2317,7 @@ class BookingController extends Controller {
 				'drivers_trips/' . $data['driver_id'] . '/CategoryType' => $data['vehicle_type'],
 
 			];*/
-			
-			
+
 		} elseif ($data['service_status'] == 5) {
 			$field = 'service_start_time';
 		}
@@ -2330,7 +2326,7 @@ class BookingController extends Controller {
 			$field = 'start_time';
 			//$field='profile';
 			$update1 = array(
-				'Status'=>$data['service_status'],
+				'Status' => $data['service_status'],
 				'DriverId' => $data['driver_id'],
 				'DriverName' => $data['driver_name'],
 				'DriverLastName' => $data['driver_lname'],
@@ -2340,18 +2336,18 @@ class BookingController extends Controller {
 				'TripOtp' => $data['otp'],
 				'Rating' => $data['rating'],
 				'VehicleNumber' => $data['vehicle_number'],
-				'DriverPhoneNumber' => $data['phone']
+				'DriverPhoneNumber' => $data['phone'],
 			);
 			$newpost = $database->getReference('customer_trips/' . $data['customer_id'])
 				->update($update1);
 
 			$updates = array('Status' => $data['service_status'],
-				'TripOtp' => $data['otp']
+				'TripOtp' => $data['otp'],
 			);
 			$newpost = $database->getReference('drivers_trips/' . $data['driver_id'])
 				->update($updates);
 
-			$this->driverStatusUpdate($data['category_id'],$data['booking_id'],$data['driver_id']);
+			$this->driverStatusUpdate($data['category_id'], $data['booking_id'], $data['driver_id']);
 			/*$updates = [
 				'drivers_trips/' . $data['driver_id'] . '/Status' => $data['service_status'],
 				'drivers_trips/' . $data['driver_id'] . '/TripOtp' => $data['otp'],
@@ -2361,7 +2357,6 @@ class BookingController extends Controller {
 			// $data['category_type']=$username1->vehicle_type;
 			// $data['otp']=$job->trip_num;
 			// $data['vehicle_number']=$username1->vehicle_num;
-
 
 			/*$update1 = [
 				'customer_trips/' . $data['customer_id'] . '/Status' => $data['service_status'],
@@ -2376,8 +2371,7 @@ class BookingController extends Controller {
 				'customer_trips/' . $data['customer_id'] . '/VehicleNumber' => $data['vehicle_number'],
 				'customer_trips/' . $data['customer_id'] . '/DriverPhoneNumber' => $data['phone'],
 			];*/
-			
-			
+
 		}
 		if ($data['service_status'] > 5) {
 			if ($data['service_status'] == 6) {
@@ -2474,10 +2468,10 @@ class BookingController extends Controller {
 	}
 
 	protected function updateadminFirebase($input) {
-		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/'.env('FIREBASE_KEY'));
+		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
-		
+
 		if ($input['service_status'] == 2) {
 			$field = 'start_time';
 			$resultqa['Status'] = "1";
@@ -2499,15 +2493,15 @@ class BookingController extends Controller {
 			$resultqa['driver_id'] = $input['driver_id'];
 			$resultqa['added_by'] = 'admin';
 			$resultqa['RequestFrom'] = 'Admin';
-			$resultqa['RequestFromOtp'] = isset($input['send_OTP']) ?  $input['send_OTP'] : '1';;
-			
-			$driver = Driver::where('id',$input['driver_id'])->first()->toArray();
-			
+			$resultqa['RequestFromOtp'] = isset($input['send_OTP']) ? $input['send_OTP'] : '1';
+
+			$driver = Driver::where('id', $input['driver_id'])->first()->toArray();
+
 			$resultqa['DriverPhoneNumber'] = $driver['phone_number'];
 			$resultqa['DriverName'] = $driver['name'];
 			$resultqa['DriverLastName'] = $driver['last_name'];
 
-			if($driver['device_id']!='0' && $driver['device_id']!=''){
+			if ($driver['device_id'] != '0' && $driver['device_id'] != '') {
 				$resultss = $this->sendFCMDriver($driver['device_id'], "Admin added a trip");
 			}
 
@@ -2526,50 +2520,50 @@ class BookingController extends Controller {
 
 		return true;
 	}
-	public function driverStatusUpdate($vehicle_id='',$booking_id='',$driver_id=''){
-			$serviceAccount = ServiceAccount::fromJsonFile(public_path() .'/'. env('FIREBASE_KEY'));
-			$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
-			$database = $firebase->getDatabase();			
-			$stat_upd = $database->getReference('drivers_location'.'/'.$vehicle_id);
-			$stat_up = $stat_upd->getValue();
-			
-			foreach ($stat_up as $k => $driver) {
-				$status_update = $database->getReference('drivers_trips'.'/'.$k)->getValue();
-				if($k != $driver_id){
-					if(isset($status_update['BookingId']) &&  $status_update['BookingId']!='' && $status_update['BookingId'] == $booking_id){
-						//print_r($k);
-						$update1 = [
-							'drivers_trips/' . $k .'/Status' => '0',
-						];
-						$st_up = $database->getReference()->update($update1);
-					}
+	public function driverStatusUpdate($vehicle_id = '', $booking_id = '', $driver_id = '') {
+		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
+		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
+		$database = $firebase->getDatabase();
+		$stat_upd = $database->getReference('drivers_location' . '/' . $vehicle_id);
+		$stat_up = $stat_upd->getValue();
+
+		foreach ($stat_up as $k => $driver) {
+			$status_update = $database->getReference('drivers_trips' . '/' . $k)->getValue();
+			if ($k != $driver_id) {
+				if (isset($status_update['BookingId']) && $status_update['BookingId'] != '' && $status_update['BookingId'] == $booking_id) {
+					//print_r($k);
+					$update1 = [
+						'drivers_trips/' . $k . '/Status' => '0',
+					];
+					$st_up = $database->getReference()->update($update1);
 				}
 			}
+		}
 		return TRUE;
 	}
 
-	public function TimeoutUpdate($data){
+	public function TimeoutUpdate($data) {
 
 		$vehicle_id = $data['vehicle_id'];
 		$booking_id = $data['booking_id'];
 
-		$serviceAccount = ServiceAccount::fromJsonFile(public_path() .'/'. env('FIREBASE_KEY'));
+		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
-		$database = $firebase->getDatabase();			
-		$stat_upd = $database->getReference('drivers_location'.'/'.$vehicle_id);
+		$database = $firebase->getDatabase();
+		$stat_upd = $database->getReference('drivers_location' . '/' . $vehicle_id);
 		$stat_up = $stat_upd->getValue();
-			
+
 		foreach ($stat_up as $k => $driver) {
-			$status_update = $database->getReference('drivers'.'/'.$k.'/request')->getValue();
-			if(isset($status_update['booking_id']) && $status_update['booking_id']!='' && $status_update['booking_id'] == $booking_id){
+			$status_update = $database->getReference('drivers' . '/' . $k . '/request')->getValue();
+			if (isset($status_update['booking_id']) && $status_update['booking_id'] != '' && $status_update['booking_id'] == $booking_id) {
 				$update1 = [
-					'drivers/' . $k .'/request/status' => '0',
+					'drivers/' . $k . '/request/status' => '0',
 				];
 				$st_up = $database->getReference()->update($update1);
 			}
 		}
 		return TRUE;
-	}	
+	}
 
 	protected function sendFCMDriver($token, $msg) {
 		$optionBuilder = new OptionsBuilder();
@@ -2588,7 +2582,7 @@ class BookingController extends Controller {
 
 		$downstreamResponse = FCM::sendTo($token, $option, $notification, $data);
 	}
-		protected function available_drivers($data) {
+	protected function available_drivers($data) {
 		$c_lat = $data['latitude'];
 		$c_lon = $data['longitude'];
 		$result = array();
@@ -2597,55 +2591,55 @@ class BookingController extends Controller {
 		$serviceAccount = ServiceAccount::fromJsonFile(config_path(env('FIREBASE_KEY')));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
-		$drivers = $database->getReference('drivers_location/'.$data['vehicle_id'])->getValue();
+		$drivers = $database->getReference('drivers_location/' . $data['vehicle_id'])->getValue();
 		//print_r($drivers);exit;
 		//$unit = "K";
 		$driverLists = [];
 
-		 if(is_array($drivers)){
-            foreach ($drivers as $key => $driver) {
- 
-                $driver_profile=Driver::where('id',$key)->first();
-                
-                if(is_object($driver_profile)){
+		if (is_array($drivers)) {
+			foreach ($drivers as $key => $driver) {
 
-                    if($driver_profile->status==1) {
+				$driver_profile = Driver::where('id', $key)->first();
 
-                        $radius = DB::table('app_settings')->where('id','1')->value('radius');
+				if (is_object($driver_profile)) {
 
-                        if($radius!='' && $radius!='0'){
-                            $radius = $radius;
-                        } else {
-                            $radius = 1.5;
-                        }
+					if ($driver_profile->status == 1) {
 
-                        if($driver != ""){
-                            if(@$driver['status'] == 1 && $driver['l'][0] != 0 && $driver['l'][1] != 0){
-                                $distance = $this->getDistance( $c_lat, $c_lon, $driver['l'][0], $driver['l'][1] );
-                                if($distance <= $radius){
-                                    $result[] = $driver_profile->toArray();
-                                }
-                            }
-                        }
-                    }   
-                }
-            }
-        }
+						$radius = DB::table('app_settings')->where('id', '1')->value('radius');
+
+						if ($radius != '' && $radius != '0') {
+							$radius = $radius;
+						} else {
+							$radius = 1.5;
+						}
+
+						if ($driver != "") {
+							if (@$driver['status'] == 1 && $driver['l'][0] != 0 && $driver['l'][1] != 0) {
+								$distance = $this->getDistance($c_lat, $c_lon, $driver['l'][0], $driver['l'][1]);
+								if ($distance <= $radius) {
+									$result[] = $driver_profile->toArray();
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 
 		return $result;
 	}
 
-	public function getDistance( $latitude1, $longitude1, $latitude2, $longitude2 ) {  
-	    $earth_radius = 6371;
+	public function getDistance($latitude1, $longitude1, $latitude2, $longitude2) {
+		$earth_radius = 6371;
 
-	    $dLat = deg2rad( $latitude2 - $latitude1 );  
-	    $dLon = deg2rad( $longitude2 - $longitude1 );  
+		$dLat = deg2rad($latitude2 - $latitude1);
+		$dLon = deg2rad($longitude2 - $longitude1);
 
-	    $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($latitude1)) * cos(deg2rad($latitude2)) * sin($dLon/2) * sin($dLon/2);  
-	    $c = 2 * asin(sqrt($a));  
-	    $d = $earth_radius * $c;  
+		$a = sin($dLat / 2) * sin($dLat / 2) + cos(deg2rad($latitude1)) * cos(deg2rad($latitude2)) * sin($dLon / 2) * sin($dLon / 2);
+		$c = 2 * asin(sqrt($a));
+		$d = $earth_radius * $c;
 
-	    return $d;  
+		return $d;
 	}
 
 	protected function driverList($data) {
@@ -2656,73 +2650,71 @@ class BookingController extends Controller {
 		$unit = "K";
 		$driverLists = [];
 		foreach ($drivers as $driver) {
-			$driver_id=$driver->driver_id;
+			$driver_id = $driver->driver_id;
 			$serviceAccount = ServiceAccount::fromJsonFile(env('FIREBASE_KEY'));
 			$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 			$database = $firebase->getDatabase();
-			$drivers = $database->getReference('drivers_location/'.$data['vehicle_id'].'/'.$driver_id)->getValue();
+			$drivers = $database->getReference('drivers_location/' . $data['vehicle_id'] . '/' . $driver_id)->getValue();
 
 			/*print_r($driver_id);echo '<br>';
 			print_r($drivers);*/
 			//print_r($drivers);
 			//print_r($drivers[$driver_id][l][0]);exit;
 			//echo $c_lat.'<br>'.$c_lon.'<br>';
-			if(@$drivers['status'] == 0)
-			{				
-				$driver_profile=Driver::where('id',$driver_id)->first();
-				if(is_object($driver_profile)){
-				if($driver_profile->status==1){
-					/*$d_lon = $driver->d_lon;
+			if (@$drivers['status'] == 0) {
+				$driver_profile = Driver::where('id', $driver_id)->first();
+				if (is_object($driver_profile)) {
+					if ($driver_profile->status == 1) {
+						/*$d_lon = $driver->d_lon;
 					$d_lat = $driver->d_lat;*/
-					$d_lat = $drivers['l'][0];
-					$d_lon = $drivers['l'][1];
-					$theta = $d_lon - $c_lon;
-					$dist = sin(deg2rad($d_lat)) * sin(deg2rad($c_lat)) + cos(deg2rad($d_lat)) * cos(deg2rad($c_lat)) * cos(deg2rad($theta));
-					$dist = acos($dist);
-					$dist = rad2deg($dist);
-					$miles = $dist * 60 * 1.1515;
-					if ($unit == "K") {
-						$distance = ($miles * 1.609344);
-					} else {
-						$distance = $miles;
+						$d_lat = $drivers['l'][0];
+						$d_lon = $drivers['l'][1];
+						$theta = $d_lon - $c_lon;
+						$dist = sin(deg2rad($d_lat)) * sin(deg2rad($c_lat)) + cos(deg2rad($d_lat)) * cos(deg2rad($c_lat)) * cos(deg2rad($theta));
+						$dist = acos($dist);
+						$dist = rad2deg($dist);
+						$miles = $dist * 60 * 1.1515;
+						if ($unit == "K") {
+							$distance = ($miles * 1.609344);
+						} else {
+							$distance = $miles;
+						}
+						if ($distance <= 5) {
+							$driverLists[] = $driver->driver;
+						}
 					}
-					if ($distance <= 5) {
-						$driverLists[] = $driver->driver;
-					}
-				}
 				}
 			}
 		}
 		return $driverLists;
 	}
 
+	public function getphone(Request $request) {
+		$q = $request->get('query');
+		return Customer::where('phone_number', 'like', '%' . $q . '%')->get(['phone_number as data', DB::raw('phone_number as value')]);
+		exit;
+	}
 
-	public function getphone(Request $request){
-       $q = $request->get('query');
-       return  Customer::where('phone_number','like','%'.$q.'%')->get(['phone_number as data', DB::raw('phone_number as value')]);
-       exit;
-    }
-
-    public function getemail(Request $request){
-       $q = $request->get('query');
-       return  Customer::where('email','like','%'.$q.'%')->get(['email as data', DB::raw('email as value')]);
-       exit;
-    }
+	public function getemail(Request $request) {
+		$q = $request->get('query');
+		return Customer::where('email', 'like', '%' . $q . '%')->get(['email as data', DB::raw('email as value')]);
+		exit;
+	}
 
 	public function calculateEstimate(Request $request) {
 		$input = $request->all();
-		$distance = $this->findDistance($input['from_lat'],$input['from_lng'],$input['to_lat'],$input['to_lng']);
-		$fares = DB::table('vehicle_categories')->where('id',$input['vehicle_id'])->first();
-		$distance_unit = DB::table('app_settings')->where('id',1)->value('distance_unit');
+		$distance = $this->findDistance($input['from_lat'], $input['from_lng'], $input['to_lat'], $input['to_lng']);
+		$fares = DB::table('vehicle_categories')->where('id', $input['vehicle_id'])->first();
+		$distance_unit = DB::table('app_settings')->where('id', 1)->value('distance_unit');
 		$total_fare = $fares->base_fare + ($fares->price_per_km * $distance);
-		$result['fare'] = number_format($total_fare,2);
-		$result['distance'] = number_format($distance,2).' '.$distance_unit;
+		$result['fare'] = number_format($total_fare, 2);
+		$result['distance'] = number_format($distance, 2) . ' ' . $distance_unit;
 
 		return json_encode($result);
 	}
 
-	public function findDistance($from_lat,$from_lng,$to_lat,$to_lng){
-        $ch = curl_init('https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins='.$from_lat.','.$from_lng.'&destinations='.$to_lat.','.$to_lng.'&key='.env('GOOGLE_MAP_API_KEY'));
+	public function findDistance($from_lat, $from_lng, $to_lat, $to_lng) {
+		$ch = curl_init('https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=' . $from_lat . ',' . $from_lng . '&destinations=' . $to_lat . ',' . $to_lng . '&key=' . env('GOOGLE_MAP_API_KEY'));
 		curl_setopt($ch, CURLOPT_POST, 1);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, '');
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

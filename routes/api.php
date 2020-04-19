@@ -17,6 +17,8 @@
 // Route::middleware(['auth.apikey'])->get('/test', function (Request $request) {
 //     return $request->user(); // Returns the associated model to the API key
 // });
+
+// KEY01718C67609A2A8CE6322DC06ECD87A2_bkuHVRJn1FBgNPjQMjiqam
 Route::group([
 
 	'middleware' => 'api',
@@ -26,6 +28,11 @@ Route::group([
 	Route::post('login', 'AuthController@login');
 	//Route::post('driver/add', 'AuthController@login');
 });
+Route::get('sendSms', function () {
+	return send_sms("this is message", "+923147592241");
+});
+Route::post('user/verify', 'AuthController@verifyUser');
+Route::post('user/verifyOtp', 'AuthController@verifyOtp');
 Route::post('customer/add', 'AuthController@addCustomer');
 Route::post('driver/add', 'AuthController@addDriver');
 Route::post('driver/sendOTP', 'AuthController@sendOTP');
@@ -58,10 +65,10 @@ Route::post('booking/history/past', 'BookingController@viewPast');
 Route::post('booking/history/upcoming', 'BookingController@viewUpcoming');
 Route::post('booking/history/mailInvoice', 'BookingController@mailInvoice');
 
-Route::get('pdfview',array('as'=>'pdfview','uses'=>'BookingController@mailInvoice'));
+Route::get('pdfview', array('as' => 'pdfview', 'uses' => 'BookingController@mailInvoice'));
 
 Route::post('booking/add', 'BookingController@addTrip');
-	
+
 Route::post('booking/admin_assign', 'BookingController@admin_assign');
 
 Route::post('booking/driverCheckIn', 'BookingController@driverCheckIn');

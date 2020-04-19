@@ -24,6 +24,7 @@ class ComposerStaticInit32981c517ff38ba86dd1115147e2c6cf
         '801c31d8ed748cfa537fa45402288c95' => __DIR__ . '/..' . '/psy/psysh/src/functions.php',
         'f7c6080b46f9fe41a46a657439674576' => __DIR__ . '/..' . '/kreait/firebase-php/src/Firebase.php',
         '0ccdf99b8f62f02c52cba55802e0c2e7' => __DIR__ . '/..' . '/zircote/swagger-php/src/functions.php',
+        '6d394c3a532652dafb4dd296ba6a3f0b' => __DIR__ . '/../..' . '/app/Http/helpers.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -670,6 +671,9 @@ class ComposerStaticInit32981c517ff38ba86dd1115147e2c6cf
         'App\\Url' => __DIR__ . '/../..' . '/app/Url.php',
         'App\\User' => __DIR__ . '/../..' . '/app/User.php',
         'App\\VehicleCategory' => __DIR__ . '/../..' . '/app/VehicleCategory.php',
+        'App\\VehicleColor' => __DIR__ . '/../..' . '/app/VehicleColor.php',
+        'App\\VehicleMake' => __DIR__ . '/../..' . '/app/VehicleMake.php',
+        'App\\VehicleModel' => __DIR__ . '/../..' . '/app/VehicleModel.php',
         'Barryvdh\\DomPDF\\Facade' => __DIR__ . '/..' . '/barryvdh/laravel-dompdf/src/Facade.php',
         'Barryvdh\\DomPDF\\PDF' => __DIR__ . '/..' . '/barryvdh/laravel-dompdf/src/PDF.php',
         'Barryvdh\\DomPDF\\ServiceProvider' => __DIR__ . '/..' . '/barryvdh/laravel-dompdf/src/ServiceProvider.php',

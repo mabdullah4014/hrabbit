@@ -5,17 +5,18 @@ namespace App\Http\Controllers;
 use App\AppSetting;
 use App\Customer;
 use App\Driver;
-use App\Email;
 use App\DriverCheckin;
-use App\URL;
+use App\Email;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\ServiceAccount;
 use Mail;
-use Illuminate\Support\Facades\DB;
+
 class AuthController extends Controller {
 	/**
 	 * Display a listing of the resource.
@@ -25,7 +26,7 @@ class AuthController extends Controller {
 	//Customer Related Login and Register Process starts
 	public function login() {
 		$validator = Validator::make($_REQUEST, [
-			'email' => 'required',
+			'phone_number' => 'required',
 			'password' => 'required',
 			'type' => 'required',
 		]);
@@ -36,11 +37,11 @@ class AuthController extends Controller {
 			$options = [
 				'cost' => 12,
 			];
-			$credentials = request(['email', 'password', 'otp']);
-			$customer = Customer::where('email', request(['email']))->first();
+			$credentials = request(['phone_number', 'password', 'otp']);
+			$customer = Customer::where('phone_number', request(['phone_number']))->first();
 			if (!($customer)) {
 				$response['code'] = 401;
-				$response['message'] = 'Mail Not Found.';
+				$response['message'] = 'Phone Number Not Found.';
 				return response()->json($response, 200);
 			}
 			if (Hash::check($credentials['password'], $customer->password)) {
@@ -49,7 +50,7 @@ class AuthController extends Controller {
 					$customer->device_id = $_REQUEST['device_id'] ? $_REQUEST['device_id'] : $customer->device_id;
 				}
 
-				if(isset($_REQUEST['device'])){
+				if (isset($_REQUEST['device'])) {
 					$customer->device = $_REQUEST['device'] ? $_REQUEST['device'] : $customer->device;
 				}
 
@@ -64,8 +65,8 @@ class AuthController extends Controller {
 			$options = [
 				'cost' => 12,
 			];
-			$credentials = request(['email', 'password', 'otp']);
-			$driver = Driver::where('email', request(['email']))->first();
+			$credentials = request(['phone_number', 'password', 'otp']);
+			$driver = Driver::where('phone_number', request(['phone_number']))->first();
 
 			if (!($driver)) {
 				$response['code'] = 401;
@@ -77,10 +78,15 @@ class AuthController extends Controller {
 					$driver->device_id = $_REQUEST['device_id'] ? $_REQUEST['device_id'] : $driver->device_id;
 				}
 
-				if(isset($_REQUEST['device'])){
+				if (isset($_REQUEST['device'])) {
 					$driver->device = $_REQUEST['device'] ? $_REQUEST['device'] : $driver->device;
 				}
 
+				if (!$driver->verified) {
+					$response['code'] = 402;
+					$response['message'] = 'User not verified.';
+					return $response;
+				}
 				$driver->save();
 				array_walk_recursive($driver, function (&$item, $key) {
 					$item = null === $item ? '' : $item;
@@ -122,7 +128,7 @@ class AuthController extends Controller {
 	// 			$otpcheck=MobileVerification::where('id',1)->first();
 	// 			if($otpcheck->mode=="1"){
 	// 				$name = $request->input('name');
-	// 				$otp = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
+	// 				$otp = $this->getOTP();
 	// 				$mail_header = array("name" => $name, "otp" => $otp);
 	// 				Mail::send('mails.addDriver', $mail_header, function ($message)
 	// 					use ($name, $otp, $email) {
@@ -141,7 +147,7 @@ class AuthController extends Controller {
 	// 				return $response;
 	// 			}
 	// 			else{
-	// 				$otp = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
+	// 				$otp = $this->getOTP();
 	// 				$result['otp'] = $otp;
 	// 				$result['email'] = $request->input('email');
 	// 				$result['phone_number'] = $request->input('phone_number');
@@ -172,26 +178,26 @@ class AuthController extends Controller {
 		$otpcheck = AppSetting::where('id', 1)->first();
 		if ($otpcheck->otp == '1') {
 			$avl = $this->checkAvailability($input);
-			if($avl['available']) {
+			if ($avl['available']) {
 				$name = $request->input('name');
-				$otp = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
-				$social_url=DB::table('settings')->first();
-				$skype=$social_url->skype;
-				$facebook=$social_url->facebook;
-				$twitter=$social_url->twitter;
-				$app_name=env("APP_NAME");
-				$from_mail=env("MAIL_USERNAME");
+				$otp = $this->getOTP();
+				$social_url = DB::table('settings')->first();
+				$skype = $social_url->skype;
+				$facebook = $social_url->facebook;
+				$twitter = $social_url->twitter;
+				$app_name = env("APP_NAME");
+				$from_mail = env("MAIL_USERNAME");
 
-				$website=$social_url->website_url;
-				$email_to=$social_url->mail_to;
-				$logo=$social_url->logo_url;
-				$admin_mail=$social_url->email;
-				$content=Email::select('content')->where('template_name', '=', 'Driver Signup')->first();
-				$content=str_replace("{{$otp}}", $otp, $content->content);
+				$website = $social_url->website_url;
+				$email_to = $social_url->mail_to;
+				$logo = $social_url->logo_url;
+				$admin_mail = $social_url->email;
+				$content = Email::select('content')->where('template_name', '=', 'Driver Signup')->first();
+				$content = str_replace("{{$otp}}", $otp, $content->content);
 
-				$mail_header = array("name" => $name, "otp" => $otp,'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,'content'=>$content);
+				$mail_header = array("name" => $name, "otp" => $otp, 'skype' => $skype, 'facebook' => $facebook, 'twitter' => $twitter, 'website' => $website, 'email_to' => $email_to, 'logo' => $logo, 'app_name' => $app_name, 'admin_mail' => $admin_mail, 'content' => $content);
 				Mail::send('mails.addDriver', $mail_header, function ($message)
-					 use ($name, $otp, $email,$from_mail, $app_name) {
+					 use ($name, $otp, $email, $from_mail, $app_name) {
 						$message->from($from_mail, $app_name);
 						$message->subject('Registration');
 						$message->to($email);
@@ -215,7 +221,7 @@ class AuthController extends Controller {
 			$avl = $this->checkAvailability($input);
 			if ($avl['available']) {
 				$name = $request->input('name');
-				$otp = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
+				$otp = $this->getOTP();
 				$result['otp'] = $otp;
 				$result['email'] = $request->input('email');
 				$result['phone_number'] = $request->input('phone_number');
@@ -292,7 +298,7 @@ class AuthController extends Controller {
 		 *     )
 		 * )
 		 */
-		
+
 		$input = $request->all();
 		$validator = Validator::make($input, [
 			'email' => 'required',
@@ -347,22 +353,22 @@ class AuthController extends Controller {
 			$username = Customer::select('name', 'otp')->where('email', '=', $email)->first();
 			$name = $username->name;
 			$otp = $username->otp;
-			$social_url=DB::table('settings')->first();
-			$skype=$social_url->skype;
-			$facebook=$social_url->facebook;
-			$twitter=$social_url->twitter;
-			$app_name=env("APP_NAME");
-			$from_mail=env("MAIL_USERNAME");
-			$website=$social_url->website_url;
-			$email_to=$social_url->mail_to;
-			$logo=$social_url->logo_url;
-			$admin_mail=$social_url->email;
-			$content=Email::select('content')->where('template_name', '=', 'Customer Signup')->first();
-			
-			$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
-			$mail_header = array("name" => $name, "otp" => $otp,'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,'content'=>$content);
+			$social_url = DB::table('settings')->first();
+			$skype = $social_url->skype;
+			$facebook = $social_url->facebook;
+			$twitter = $social_url->twitter;
+			$app_name = env("APP_NAME");
+			$from_mail = env("MAIL_USERNAME");
+			$website = $social_url->website_url;
+			$email_to = $social_url->mail_to;
+			$logo = $social_url->logo_url;
+			$admin_mail = $social_url->email;
+			$content = Email::select('content')->where('template_name', '=', 'Customer Signup')->first();
+
+			$content = str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
+			$mail_header = array("name" => $name, "otp" => $otp, 'skype' => $skype, 'facebook' => $facebook, 'twitter' => $twitter, 'website' => $website, 'email_to' => $email_to, 'logo' => $logo, 'app_name' => $app_name, 'admin_mail' => $admin_mail, 'content' => $content);
 			Mail::send('mails.addCustomer', $mail_header, function ($message)
-				 use ($user,$from_mail, $app_name) {
+				 use ($user, $from_mail, $app_name) {
 					$message->from($from_mail, $app_name);
 					$message->subject('Registration');
 					$message->to($user->email);
@@ -396,12 +402,11 @@ class AuthController extends Controller {
 		$options = [
 			'cost' => 12,
 		];
-		$input = $request->all();		
+		$input = $request->all();
 		$digits = 4;
-		$otp = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
+		$otp = $this->getOTP();
 		$input['otp'] = $otp;
 		$email = $request['email'];
-
 
 		$check = $this->checkCustomer($request);
 		if (!$check['exist']) {
@@ -502,6 +507,11 @@ class AuthController extends Controller {
 			'vehicle_id' => 'required',
 			'license_no' => 'required',
 			'document' => 'required',
+			'vehicle_make_id' => 'required',
+			'vehicle_model_id' => 'required',
+			'vehicle_color_id' => 'required',
+			'img_insurance' => 'required',
+			'img_reg_sticker' => 'required',
 			//	'mode' => 'required',
 		]);
 		if ($validator->fails()) {
@@ -554,22 +564,22 @@ class AuthController extends Controller {
 			$username = Driver::select('name', 'otp')->where('email', '=', $email)->first();
 			$name = $username->name;
 			$otp = $username->otp;
-			$social_url=DB::table('settings')->first();
-			$skype=$social_url->skype;
-			$facebook=$social_url->facebook;
-			$twitter=$social_url->twitter;
-			$app_name=env("APP_NAME");
-			$from_mail=env("MAIL_USERNAME");
-			$website=$social_url->website_url;
-			$email_to=$social_url->mail_to;
-			$logo=$social_url->logo_url;
-			$admin_mail=$social_url->email;
-			$content=Email::select('content')->where('template_name', '=', 'Driver Signup')->first();
-			$content=str_replace('{{$otp}}', $otp, $content->content);
+			$social_url = DB::table('settings')->first();
+			$skype = $social_url->skype;
+			$facebook = $social_url->facebook;
+			$twitter = $social_url->twitter;
+			$app_name = env("APP_NAME");
+			$from_mail = env("MAIL_USERNAME");
+			$website = $social_url->website_url;
+			$email_to = $social_url->mail_to;
+			$logo = $social_url->logo_url;
+			$admin_mail = $social_url->email;
+			$content = Email::select('content')->where('template_name', '=', 'Driver Signup')->first();
+			$content = str_replace('{{$otp}}', $otp, $content->content);
 
-			$mail_header = array("name" => $name, "otp" => $otp,'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,'content'=>$content);
+			$mail_header = array("name" => $name, "otp" => $otp, 'skype' => $skype, 'facebook' => $facebook, 'twitter' => $twitter, 'website' => $website, 'email_to' => $email_to, 'logo' => $logo, 'app_name' => $app_name, 'admin_mail' => $admin_mail, 'content' => $content);
 			Mail::send('mails.addDriver2', $mail_header, function ($message)
-				 use ($user,$from_mail, $app_name) {
+				 use ($user, $from_mail, $app_name) {
 					$message->from($from_mail, $app_name);
 					$message->subject('Registration');
 					$message->to($user->email);
@@ -591,25 +601,33 @@ class AuthController extends Controller {
 		$input = $request->all();
 		//$input['vehicle_type'] = $input['vehicle_id'];
 		$digits = 4;
-		$otp = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
+		$otp = $this->getOTP();
 		$input['otp'] = $otp;
 		$email = $request['email'];
-		//$driver = Driver::find($request->input('id'));
-		$file = $request->document;
-		$photoName1 = 'uploads/DriverProof/'.time().'.'.$file->getClientOriginalExtension();
-		
-		$path = $request->document->move('uploads/DriverProof',$photoName1);
-		//$path = $request->document->move('uploads/uploads/DriverProof');
-	//	$prefix = 'uploads/';
-		// if (substr($path, 0, strlen($prefix)) == $prefix) {
-		// 	$path = substr($path, strlen($prefix));
-		// }
-
-		//$input['id_proof']=$path;
-		//$trimmed = str_replace('/storage','', $path);
-		//$driver->id_proof = 'uploads/DriverProof/'.time().'.'.$file->getClientOriginalExtension();
-			//$driver->save();
-		$input['id_proof'] = $photoName1;
+		if ($request->hasFile('document')) {
+			$file = $request->document;
+			$photoName1 = 'uploads/DriverProof/' . time() . '_' . Str::random(16) . '.' . $file->getClientOriginalExtension();
+			$path = $request->document->move('uploads/DriverProof', $photoName1);
+			$input['id_proof'] = $photoName1;
+		}
+		if ($request->hasFile('img_insurance')) {
+			$file = $request->img_insurance;
+			$photoName1 = 'uploads/DriverProof/' . time() . '_' . Str::random(16) . '.' . $file->getClientOriginalExtension();
+			$path = $request->img_insurance->move('uploads/DriverProof', $photoName1);
+			$input['insurance'] = $photoName1;
+		}
+		if ($request->hasFile('img_reg_sticker')) {
+			$file = $request->img_reg_sticker;
+			$photoName1 = 'uploads/DriverProof/' . time() . '_' . Str::random(16) . '.' . $file->getClientOriginalExtension();
+			$path = $request->img_reg_sticker->move('uploads/DriverProof', $photoName1);
+			$input['reg_sticker'] = $photoName1;
+		}
+		if ($request->hasFile('img_experience')) {
+			$file = $request->img_experience;
+			$photoName1 = 'uploads/DriverProof/' . time() . '_' . Str::random(16) . '.' . $file->getClientOriginalExtension();
+			$path = $request->img_experience->move('uploads/DriverProof', $photoName1);
+			$input['experience'] = $photoName1;
+		}
 
 		$check = $this->checkDriver($request);
 		if (!$check['exist']) {
@@ -680,25 +698,25 @@ class AuthController extends Controller {
 			$username = Driver::select('id', 'name', 'otp', 'email')->where('email', '=', $email)->first();
 			$name = $username->name;
 			//$otp = $username->otp;
-			$otp = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
+			$otp = $this->getOTP();
 			$username->otp = $otp;
 			$username->save();
-			$social_url=DB::table('settings')->first();
-			$skype=$social_url->skype;
-			$facebook=$social_url->facebook;
-			$twitter=$social_url->twitter;
-			$app_name=env("APP_NAME");
-			$from_mail=env("MAIL_USERNAME");
-			$website=$social_url->website_url;
-			$email_to=$social_url->mail_to;
-			$logo=$social_url->logo_url;
-			$admin_mail=$social_url->email;
-			$content=Email::select('content')->where('template_name', '=', 'Forgot Password')->first();
-			$content=str_replace('{{$otp}}', $otp, $content->content);
+			$social_url = DB::table('settings')->first();
+			$skype = $social_url->skype;
+			$facebook = $social_url->facebook;
+			$twitter = $social_url->twitter;
+			$app_name = env("APP_NAME");
+			$from_mail = env("MAIL_USERNAME");
+			$website = $social_url->website_url;
+			$email_to = $social_url->mail_to;
+			$logo = $social_url->logo_url;
+			$admin_mail = $social_url->email;
+			$content = Email::select('content')->where('template_name', '=', 'Forgot Password')->first();
+			$content = str_replace('{{$otp}}', $otp, $content->content);
 
-			$mail_header = array("name" => $name, "otp" => $otp,'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,'content'=>$content);
+			$mail_header = array("name" => $name, "otp" => $otp, 'skype' => $skype, 'facebook' => $facebook, 'twitter' => $twitter, 'website' => $website, 'email_to' => $email_to, 'logo' => $logo, 'app_name' => $app_name, 'admin_mail' => $admin_mail, 'content' => $content);
 			Mail::send('mails.forgotPassword', $mail_header, function ($message)
-				 use ($user, $otp, $name,$from_mail, $app_name) {
+				 use ($user, $otp, $name, $from_mail, $app_name) {
 					$message->from($from_mail, $app_name);
 					$message->subject('Forgot Password');
 					$message->to($user->email);
@@ -723,32 +741,31 @@ class AuthController extends Controller {
 			$username = Customer::select('id', 'name', 'otp', 'email')->where('email', '=', $email)->first();
 			$name = $username->name;
 			//$otp = $username->otp;
-			$otp = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
+			$otp = $this->getOTP();
 			$username->otp = $otp;
 			$username->save();
-			$social_url=DB::table('settings')->first();
-			$skype=$social_url->skype;
-			$facebook=$social_url->facebook;
-			$twitter=$social_url->twitter;
-			$app_name=env("APP_NAME");
-			$from_mail=env("MAIL_USERNAME");
-			$website=$social_url->website_url;
-			$email_to=$social_url->mail_to;
-			$logo=$social_url->logo_url;
-			$admin_mail=$social_url->email;
-			$content=Email::select('content')->where('template_name', '=', 'Forgot Password')->first();
-			$content=str_replace('{{$otp}}', $otp, $content->content);
+			$social_url = DB::table('settings')->first();
+			$skype = $social_url->skype;
+			$facebook = $social_url->facebook;
+			$twitter = $social_url->twitter;
+			$app_name = env("APP_NAME");
+			$from_mail = env("MAIL_USERNAME");
+			$website = $social_url->website_url;
+			$email_to = $social_url->mail_to;
+			$logo = $social_url->logo_url;
+			$admin_mail = $social_url->email;
+			$content = Email::select('content')->where('template_name', '=', 'Forgot Password')->first();
+			$content = str_replace('{{$otp}}', $otp, $content->content);
 			//print_r($content);
-			$mail_header = array("name" => $name, "otp" => $otp,'skype'=>$skype,'facebook'=>$facebook,'twitter'=>$twitter,'website'=>$website,'email_to'=>$email_to,'logo'=>$logo,'app_name'=>$app_name,'admin_mail'=>$admin_mail,"content"=>$content);
-			
-			
+			$mail_header = array("name" => $name, "otp" => $otp, 'skype' => $skype, 'facebook' => $facebook, 'twitter' => $twitter, 'website' => $website, 'email_to' => $email_to, 'logo' => $logo, 'app_name' => $app_name, 'admin_mail' => $admin_mail, "content" => $content);
+
 			Mail::send('mails.forgotPassword', $mail_header, function ($message)
-				 use ($user, $otp, $name,$app_name,$from_mail) {
+				 use ($user, $otp, $name, $app_name, $from_mail) {
 					$message->from($from_mail, $app_name);
 					$message->subject('Forgot Password');
-					$message->to($user->email);					
+					$message->to($user->email);
 				});
-			
+
 			$response['message'] = "Mail sent successfully";
 			$response['result'] = $username;
 			return $response;
@@ -786,7 +803,7 @@ class AuthController extends Controller {
 		if ($validator->fails()) {
 			return $this->sendError('Invalid Params.', $validator->errors());
 		}
-		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/'.env('FIREBASE_KEY'));
+		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
 		$appsetting = AppSetting::first();
@@ -818,5 +835,76 @@ class AuthController extends Controller {
 			$response['message'] = "Invalid driver id.";
 		}
 		return $response;
+	}
+	protected function verifyUser(Request $request) {
+		$input = $request->all();
+		$validator = Validator::make($input, [
+			'phone_number' => 'required',
+			'device_id' => 'required',
+			'type' => 'required',
+			'device' => 'required',
+		]);
+		if ($validator->fails()) {
+			return $this->sendError('Invalid Params.', $validator->errors());
+		}
+		$type = $request->input('type');
+		$model = "App\Customer";
+		if ($type == "driver") {
+			$model = "App\Driver";
+		}
+		$user = $model::where('device_id', $request->input('device_id'))->where('phone_number', $request->input('phone_number'))->first();
+		//Signin
+		if ($user && $user->verified) {
+			$response['message'] = 200;
+			return $response;
+		}
+		//OTP
+		$user = $model::where('phone_number', $request->input('phone_number'))->first();
+		if ($user) {
+			$digits = 4;
+			$user->otp = $this->getOTP();
+			$user->verified = 0;
+			$user->device_id = $request->input('device_id');
+			$user->save();
+			$response['message'] = 300;
+			return $response;
+		}
+		$response['message'] = 100;
+		return $response;
+
+	}
+
+	protected function verifyOtp(Request $request) {
+		$input = $request->all();
+		$validator = Validator::make($input, [
+			'phone_number' => 'required',
+			'otp' => 'required',
+			'type' => 'required',
+			'device_id' => 'required',
+		]);
+		if ($validator->fails()) {
+			return $this->sendError('Invalid Params.', $validator->errors());
+		}
+		$type = $request->input('type');
+		$model = "App\Customer";
+		if ($type == "driver") {
+			$model = "App\Driver";
+		}
+		$user = $model::where('phone_number', $request->input('phone_number'))->first();
+		if ($user) {
+			if ($user->otp == $request->input('otp') && $user->device_id == $request->input('device_id')) {
+				$user->verified = 1;
+				$user->save();
+				$response['message'] = "200";
+				return $response;
+			}
+		}
+		$response['message'] = "401";
+		return $response;
+	}
+
+	private function getOTP() {
+		return 1111;
+		// return rand(pow(10, $digits - 1), pow(10, $digits) - 1);
 	}
 }
