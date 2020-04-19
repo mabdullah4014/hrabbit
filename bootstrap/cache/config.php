@@ -338,6 +338,13 @@
     ),
     'prefix' => 'houstonrabbit_cache',
   ),
+  'constants' => 
+  array (
+    'telnyx_secret_key' => 'KEY017191943B8DEAE5308880F87E41A746_jKSx21P12o3yi6jxyCAHWu',
+    'telnyx_from' => '+13202076915',
+    'firebase_key' => 'firebase/houston-rabbit-live-6121f407ea3b.json',
+    'firebase_db' => 'https://houston-rabbit-live.firebaseio.com/',
+  ),
   'database' => 
   array (
     'default' => 'mysql',
@@ -895,11 +902,6 @@
     'secure' => false,
     'http_only' => true,
     'same_site' => NULL,
-  ),
-  'telnyx' => 
-  array (
-    'secret_key' => 'KEY017191943B8DEAE5308880F87E41A746_jKSx21P12o3yi6jxyCAHWu',
-    'from' => '+13202076915',
   ),
   'view' => 
   array (

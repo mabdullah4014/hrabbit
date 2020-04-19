@@ -6,7 +6,7 @@ if (!function_exists('send_sms')) {
 	function send_sms($body, $to) {
 		\Log::info(Str::random(16));
 		// $data = [
-		// 	'from' => Config::get('telnyx.from'),
+		// 	'from' => Config::get('constants.telnyx_from'),
 		// 	'to' => $to,
 		// 	'text' => $body,
 		// ];
@@ -18,7 +18,7 @@ if (!function_exists('send_sms')) {
 		// 	CURLOPT_CUSTOMREQUEST => "POST",
 		// 	CURLOPT_POSTFIELDS => json_encode($data),
 		// 	CURLOPT_HTTPHEADER => array(
-		// 		"Authorization: Bearer " . Config::get('telnyx.secret_key'),
+		// 		"Authorization: Bearer " . Config::get('constants.telnyx_secret_key'),
 		// 		"Content-Type: application/json",
 		// 	),
 		// ));
