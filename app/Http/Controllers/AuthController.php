@@ -855,6 +855,10 @@ class AuthController extends Controller {
 			$user->verified = 0;
 			$user->device_id = $request->input('device_id');
 			$user->save();
+			$otp_enabled = \Config::get('constants.enable_otp');
+			if ($otp_enabled) {
+				send_sms("Your OTP is: " . $user->otp, $user->phone_number);
+			}
 			$response['message'] = 300;
 			return $response;
 		}
