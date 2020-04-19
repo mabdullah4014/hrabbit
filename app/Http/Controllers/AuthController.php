@@ -792,8 +792,8 @@ class AuthController extends Controller {
 		if ($validator->fails()) {
 			return $this->sendError('Invalid Params.', $validator->errors());
 		}
-		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . Config::get('constants.firebase_key'));
-		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(Config::get('constants.firebase_db'))->create();
+		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . \Config::get('constants.firebase_key'));
+		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(\Config::get('constants.firebase_db'))->create();
 		$database = $firebase->getDatabase();
 		$appsetting = AppSetting::first();
 
