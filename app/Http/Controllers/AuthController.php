@@ -489,30 +489,19 @@ class AuthController extends Controller {
 	public function addDriver(Request $request) {
 		$input = $request->all();
 		$validator = Validator::make($input, [
-			//'devicetoken' => 'required',
 			'email' => 'required',
 			'password' => 'required',
 			'phone_number' => 'required',
 			'name' => 'required',
 			'last_name' => 'required',
-			//	'dob' => 'required',
-			//	'state' => 'required',
-			//	'country_name' => 'required',
-			//	'postal_code' => 'required',
-			//	'address' => 'required',
-			//'country_name' => 'required',
 			'device_id' => 'required',
 			'vehicle_num' => 'required',
 			'vehicle_type' => 'required',
 			'vehicle_id' => 'required',
 			'license_no' => 'required',
 			'document' => 'required',
-			'vehicle_make_id' => 'required',
-			'vehicle_model_id' => 'required',
-			'vehicle_color_id' => 'required',
 			'img_insurance' => 'required',
 			'img_reg_sticker' => 'required',
-			//	'mode' => 'required',
 		]);
 		if ($validator->fails()) {
 			return $this->sendError('Invalid Params.', $validator->errors());
