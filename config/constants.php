@@ -5,5 +5,5 @@ return [
 	'telnyx_from' => env('TELNYX_FROM'),
 	'firebase_key' => env('FIREBASE_KEY'),
 	'firebase_db' => env('FIREBASE_DB'),
-	'enable_otp' => 0,
+	'enable_otp' => 1,
 ];
