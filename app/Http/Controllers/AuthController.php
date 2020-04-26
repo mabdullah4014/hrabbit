@@ -898,6 +898,7 @@ class AuthController extends Controller {
 
 	private function getOTP() {
 		// return 1111;
+		$digits = 4;
 		return rand(pow(10, $digits - 1), pow(10, $digits) - 1);
 	}
 }
