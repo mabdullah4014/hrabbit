@@ -344,6 +344,7 @@
     'telnyx_from' => NULL,
     'firebase_key' => 'firebase/houston-rabbit-live-6121f407ea3b.json',
     'firebase_db' => 'https://houston-rabbit-live.firebaseio.com/',
+    'enable_otp' => 1,
   ),
   'database' => 
   array (
