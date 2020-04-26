@@ -14,7 +14,7 @@
         1 => 'admin',
       ),
     ),
-    'directory' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/app/Admin',
+    'directory' => '/var/www/houstonrabbit/app/Admin',
     'title' => 'HoustonRabbit',
     'https' => false,
     'auth' => 
@@ -94,7 +94,7 @@
     'show_version' => true,
     'menu_bind_permission' => true,
     'enable_default_breadcrumb' => false,
-    'extension_dir' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/app/Admin/Extensions',
+    'extension_dir' => '/var/www/houstonrabbit/app/Admin/Extensions',
     'extensions' => 
     array (
       'media-manager' => 
@@ -306,7 +306,7 @@
       'file' => 
       array (
         'driver' => 'file',
-        'path' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/storage/framework/cache/data',
+        'path' => '/var/www/houstonrabbit/storage/framework/cache/data',
       ),
       'memcached' => 
       array (
@@ -340,10 +340,11 @@
   ),
   'constants' => 
   array (
-    'telnyx_secret_key' => 'KEY017191943B8DEAE5308880F87E41A746_jKSx21P12o3yi6jxyCAHWu',
-    'telnyx_from' => '+13202076915',
+    'telnyx_secret_key' => NULL,
+    'telnyx_from' => NULL,
     'firebase_key' => 'firebase/houston-rabbit-live-6121f407ea3b.json',
     'firebase_db' => 'https://houston-rabbit-live.firebaseio.com/',
+    'enable_otp' => 1,
   ),
   'database' => 
   array (
@@ -363,7 +364,7 @@
         'port' => '3306',
         'database' => 'houston_rabbit',
         'username' => 'root',
-        'password' => '123456',
+        'password' => 'uVNxuY0Te$1*',
         'unix_socket' => '',
         'charset' => 'utf8mb4',
         'collation' => 'utf8mb4_unicode_ci',
@@ -378,7 +379,7 @@
         'port' => '3306',
         'database' => 'houston_rabbit',
         'username' => 'root',
-        'password' => '123456',
+        'password' => 'uVNxuY0Te$1*',
         'charset' => 'utf8',
         'prefix' => '',
         'schema' => 'public',
@@ -391,7 +392,7 @@
         'port' => '3306',
         'database' => 'houston_rabbit',
         'username' => 'root',
-        'password' => '123456',
+        'password' => 'uVNxuY0Te$1*',
         'charset' => 'utf8',
         'prefix' => '',
       ),
@@ -425,7 +426,7 @@
         'host' => 'localhost',
         'port' => 11211,
       ),
-      'dir' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/storage/cache',
+      'dir' => '/var/www/houstonrabbit/storage/cache',
     ),
     'properties' => 
     array (
@@ -491,7 +492,7 @@
       ),
       'store' => 
       array (
-        'path' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/storage/exports',
+        'path' => '/var/www/houstonrabbit/storage/exports',
         'returnInfo' => false,
       ),
       'pdf' => 
@@ -501,15 +502,15 @@
         array (
           'DomPDF' => 
           array (
-            'path' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/vendor/dompdf/dompdf/',
+            'path' => '/var/www/houstonrabbit/vendor/dompdf/dompdf/',
           ),
           'tcPDF' => 
           array (
-            'path' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/vendor/tecnick.com/tcpdf/',
+            'path' => '/var/www/houstonrabbit/vendor/tecnick.com/tcpdf/',
           ),
           'mPDF' => 
           array (
-            'path' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/vendor/mpdf/mpdf/',
+            'path' => '/var/www/houstonrabbit/vendor/mpdf/mpdf/',
           ),
         ),
       ),
@@ -691,19 +692,19 @@
       'admin' => 
       array (
         'driver' => 'local',
-        'root' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/public',
+        'root' => '/var/www/houstonrabbit/public',
         'visibility' => 'public',
         'url' => 'http://houstonrabbit.com',
       ),
       'local' => 
       array (
         'driver' => 'local',
-        'root' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/storage/app',
+        'root' => '/var/www/houstonrabbit/storage/app',
       ),
       'public' => 
       array (
         'driver' => 'local',
-        'root' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/public/uploads',
+        'root' => '/var/www/houstonrabbit/public/uploads',
         'url' => 'http://houstonrabbit.com/uploads',
         'visibility' => 'public',
       ),
@@ -748,13 +749,13 @@
       'single' => 
       array (
         'driver' => 'single',
-        'path' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/storage/logs/laravel.log',
+        'path' => '/var/www/houstonrabbit/storage/logs/laravel.log',
         'level' => 'debug',
       ),
       'daily' => 
       array (
         'driver' => 'daily',
-        'path' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/storage/logs/laravel.log',
+        'path' => '/var/www/houstonrabbit/storage/logs/laravel.log',
         'level' => 'debug',
         'days' => 7,
       ),
@@ -806,7 +807,7 @@
       'theme' => 'default',
       'paths' => 
       array (
-        0 => '/home/abdullah/Development/huston-rabbit/houstonrabbit/resources/views/vendor/mail',
+        0 => '/var/www/houstonrabbit/resources/views/vendor/mail',
       ),
     ),
   ),
@@ -887,7 +888,7 @@
     'lifetime' => '120',
     'expire_on_close' => false,
     'encrypt' => false,
-    'files' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/storage/framework/sessions',
+    'files' => '/var/www/houstonrabbit/storage/framework/sessions',
     'connection' => NULL,
     'table' => 'sessions',
     'store' => NULL,
@@ -903,13 +904,18 @@
     'http_only' => true,
     'same_site' => NULL,
   ),
+  'telnyx' => 
+  array (
+    'secret_key' => NULL,
+    'from' => NULL,
+  ),
   'view' => 
   array (
     'paths' => 
     array (
-      0 => '/home/abdullah/Development/huston-rabbit/houstonrabbit/resources/views',
+      0 => '/var/www/houstonrabbit/resources/views',
     ),
-    'compiled' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/storage/framework/views',
+    'compiled' => '/var/www/houstonrabbit/storage/framework/views',
   ),
   'dompdf' => 
   array (
@@ -917,10 +923,10 @@
     'orientation' => 'portrait',
     'defines' => 
     array (
-      'font_dir' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/storage/fonts/',
-      'font_cache' => '/home/abdullah/Development/huston-rabbit/houstonrabbit/storage/fonts/',
+      'font_dir' => '/var/www/houstonrabbit/storage/fonts/',
+      'font_cache' => '/var/www/houstonrabbit/storage/fonts/',
       'temp_dir' => '/tmp',
-      'chroot' => '/home/abdullah/Development/huston-rabbit/houstonrabbit',
+      'chroot' => '/var/www/houstonrabbit',
       'enable_font_subsetting' => false,
       'pdf_backend' => 'CPDF',
       'default_media_type' => 'screen',
