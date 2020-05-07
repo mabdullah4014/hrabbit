@@ -809,6 +809,7 @@ class BookingController extends Controller {
 		$input = $request->all();
 		$ctime = Carbon::now();
 		$ctime->toTimeString();
+		$customer = null;
 		if ($input['mode'] == 'ridenow') {
 			$validator = Validator::make($input, [
 				'customer_id' => 'required',
