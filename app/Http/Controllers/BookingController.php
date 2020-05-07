@@ -809,7 +809,6 @@ class BookingController extends Controller {
 		$input = $request->all();
 		$ctime = Carbon::now();
 		$ctime->toTimeString();
-		$customer = null;
 		if ($input['mode'] == 'ridenow') {
 			$validator = Validator::make($input, [
 				'customer_id' => 'required',
@@ -1504,6 +1503,7 @@ class BookingController extends Controller {
 			$ctime->toTimeString();
 			$validator = Validator::make($input, [
 				'driver_id' => 'required',
+				'customer_id' => 'required',
 				'booking_id' => 'required',
 				'payment_type' => 'required',
 			]);
@@ -1511,6 +1511,7 @@ class BookingController extends Controller {
 			if ($validator->fails()) {
 				return $this->sendError('Validation Error.' . $validator->errors());
 			}
+			$customer = Customer::find($input['customer_id']);
 			$job = DriverTrip::where('id', $input['booking_id'])->first();
 			//$job = DriverTrip::where('booking_id', $input['booking_id'])->first();
 
