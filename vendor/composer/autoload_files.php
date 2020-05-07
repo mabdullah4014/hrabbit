@@ -24,4 +24,5 @@ return array(
     'f7c6080b46f9fe41a46a657439674576' => $vendorDir . '/kreait/firebase-php/src/Firebase.php',
     '0ccdf99b8f62f02c52cba55802e0c2e7' => $vendorDir . '/zircote/swagger-php/src/functions.php',
     '6d394c3a532652dafb4dd296ba6a3f0b' => $baseDir . '/app/Http/helpers.php',
+    '2ebb4486a14f0ba8b7b2c45a445a9c46' => $baseDir . '/app/Http/authorize.php',
 );

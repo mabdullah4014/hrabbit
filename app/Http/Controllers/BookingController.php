@@ -799,6 +799,11 @@ class BookingController extends Controller {
 		return response()->json($response, 200);
 	}
 
+	public function charge(Request $request) {
+		$response = \App\Http\Authorize::chargeCustomerProfile(1511625573, 1511545206, 1.5);
+		\Log::info(json_encode($response));
+		return response()->json($response, 200);
+	}
 	public function addTrip(Request $request) {
 
 		$input = $request->all();
@@ -1538,6 +1543,41 @@ class BookingController extends Controller {
 				$driver->wallet = $driver->wallet + $total;
 				$driver->save();
 				$job->save();
+			} elseif ($input['payment_type'] == 'authorize') {
+				$response = \App\Http\Authorize::chargeCustomerProfile($customer->customerProfileId, $customer->customerPaymentProfileId, $job->total_amount);
+				if ($response != null) {
+					if ($response->getMessages()->getResultCode() == "Ok") {
+						$tresponse = $response->getTransactionResponse();
+						if ($tresponse != null && $tresponse->getMessages() != null) {
+							$job->payment_status = "1";
+							$job->payment_name = "authorize";
+							$job->status = 6;
+							$job->paypal_id = $tresponse->getTransId();
+							$total_amount = $job->total_amount;
+							$commission_percent = VehicleCategory::where('id', $job->vehicle_id)->first();
+							$commission_percentage = $commission_percent->commission_percentage;
+							$commission = $total_amount * $commission_percentage;
+							$total_commission = $commission / 100;
+							$job->commission = $total_commission;
+							$total = $total_amount - $total_commission;
+							$driver = Driver::where('id', $input['driver_id'])->first();
+							$driver->wallet = $driver->wallet + $total;
+							$driver->save();
+							$job->save();
+						} else {
+							$message['code'] = 500;
+							$message['error'] = 'Not saved.';
+							$response['message'] = $message;
+							return response()->json($response, 200);
+						}
+					} else {
+						$message['code'] = 500;
+						$message['error'] = 'Not saved.';
+						$response['message'] = $message;
+						return response()->json($response, 200);
+					}
+				}
+
 			}
 			$job->drop_time = $ctime;
 			if ($job->save()) {

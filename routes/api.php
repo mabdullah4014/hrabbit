@@ -87,3 +87,4 @@ Route::get('booking/getphone', 'BookingController@getphone');
 
 Route::get('booking/getemail', 'BookingController@getemail');
 Route::get('booking/driverStatusUpdate', 'BookingController@driverStatusUpdate');
+Route::get('booking/charge', 'BookingController@charge');
