@@ -109,9 +109,14 @@ class CustomerController extends Controller {
 			$profile->postal_code = isset($input['postal_code']) ? $input['postal_code'] : $profile->postal_code;
 			$profile->address = isset($input['address']) ? $input['address'] : $profile->address;
 			$profile->city = isset($input['city']) ? $input['city'] : $profile->city;
-			if (isset($input['customerProfileId'])) {
+			if (array_key_exists('customerProfileId', $input)) {
 				if ($input['customerProfileId'] == '') {
 					$input['customerProfileId'] = null;
+				}
+			}
+			if (array_key_exists('customerPaymentProfileId', $input)) {
+				if ($input['customerPaymentProfileId'] == '') {
+					$input['customerPaymentProfileId'] = null;
 				}
 			}
 			$profile->customerProfileId = isset($input['customerProfileId']) ? $input['customerProfileId'] : $profile->customerProfileId;
