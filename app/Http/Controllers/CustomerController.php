@@ -110,17 +110,25 @@ class CustomerController extends Controller {
 			$profile->address = isset($input['address']) ? $input['address'] : $profile->address;
 			$profile->city = isset($input['city']) ? $input['city'] : $profile->city;
 			if (array_key_exists('customerProfileId', $input)) {
-				if ($input['customerProfileId'] == '') {
+				if (empty($input['customerProfileId'])) {
 					$input['customerProfileId'] = null;
+				} else {
+					$input['customerProfileId'] = $profile->customerProfileId;
 				}
+			} else {
+				$input['customerProfileId'] = $profile->customerProfileId;
 			}
 			if (array_key_exists('customerPaymentProfileId', $input)) {
-				if ($input['customerPaymentProfileId'] == '') {
+				if (empty($input['customerPaymentProfileId'])) {
 					$input['customerPaymentProfileId'] = null;
+				} else {
+					$input['customerPaymentProfileId'] = $profile->customerPaymentProfileId;
 				}
+			} else {
+				$input['customerPaymentProfileId'] = $profile->customerPaymentProfileId;
 			}
-			$profile->customerProfileId = isset($input['customerProfileId']) ? $input['customerProfileId'] : $profile->customerProfileId;
-			$profile->customerPaymentProfileId = isset($input['customerPaymentProfileId']) ? $input['customerPaymentProfileId'] : $profile->customerPaymentProfileId;
+			$profile->customerProfileId = $input['customerProfileId'];
+			$profile->customerPaymentProfileId = $input['customerPaymentProfileId'];
 			if ($profile->save()) {
 				$response['result'] = $profile;
 				$response['message'] = 'Profile updated successfully.';
