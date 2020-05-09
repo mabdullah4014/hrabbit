@@ -87,6 +87,11 @@ class AuthController extends Controller {
 					$response['message'] = 'User not verified.';
 					return $response;
 				}
+				if (!$driver->approved) {
+					$response['code'] = 403;
+					$response['message'] = 'User not approved.';
+					return $response;
+				}
 				$driver->save();
 				array_walk_recursive($driver, function (&$item, $key) {
 					$item = null === $item ? '' : $item;
@@ -851,6 +856,14 @@ class AuthController extends Controller {
 			$model = "App\Driver";
 		}
 		$user = $model::where('device_id', $request->input('device_id'))->where('phone_number', $request->input('phone_number'))->first();
+
+		if ($type == "driver") {
+			if (!$user->approved) {
+				$response['code'] = 403;
+				$response['message'] = 'User not approved.';
+				return $response;
+			}
+		}
 		//Signin
 		if ($user && $user->verified) {
 			$response['message'] = 200;

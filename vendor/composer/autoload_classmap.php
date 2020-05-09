@@ -64,7 +64,7 @@ return array(
     'App\\Exceptions\\Handler' => $baseDir . '/app/Exceptions/Handler.php',
     'App\\HelpContent' => $baseDir . '/app/HelpContent.php',
     'App\\HelpContents' => $baseDir . '/app/HelpContents.php',
-    'App\\Helpers\\Authorize' => $baseDir . '/app/Http/authorize.php',
+    'App\\Http\\Authorize' => $baseDir . '/app/Http/authorize.php',
     'App\\Http\\Controllers\\AuthController' => $baseDir . '/app/Http/Controllers/AuthController.php',
     'App\\Http\\Controllers\\Auth\\ForgotPasswordController' => $baseDir . '/app/Http/Controllers/Auth/ForgotPasswordController.php',
     'App\\Http\\Controllers\\Auth\\LoginController' => $baseDir . '/app/Http/Controllers/Auth/LoginController.php',

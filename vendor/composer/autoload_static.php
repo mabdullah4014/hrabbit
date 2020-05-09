@@ -646,7 +646,7 @@ class ComposerStaticInit32981c517ff38ba86dd1115147e2c6cf
         'App\\Exceptions\\Handler' => __DIR__ . '/../..' . '/app/Exceptions/Handler.php',
         'App\\HelpContent' => __DIR__ . '/../..' . '/app/HelpContent.php',
         'App\\HelpContents' => __DIR__ . '/../..' . '/app/HelpContents.php',
-        'App\\Helpers\\Authorize' => __DIR__ . '/../..' . '/app/Http/authorize.php',
+        'App\\Http\\Authorize' => __DIR__ . '/../..' . '/app/Http/authorize.php',
         'App\\Http\\Controllers\\AuthController' => __DIR__ . '/../..' . '/app/Http/Controllers/AuthController.php',
         'App\\Http\\Controllers\\Auth\\ForgotPasswordController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/ForgotPasswordController.php',
         'App\\Http\\Controllers\\Auth\\LoginController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/LoginController.php',
