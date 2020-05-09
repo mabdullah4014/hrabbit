@@ -857,21 +857,28 @@ class AuthController extends Controller {
 		}
 		$user = $model::where('device_id', $request->input('device_id'))->where('phone_number', $request->input('phone_number'))->first();
 
-		if ($type == "driver") {
-			if (!$user->approved) {
-				$response['code'] = 403;
-				$response['message'] = 'User not approved.';
-				return $response;
-			}
-		}
 		//Signin
 		if ($user && $user->verified) {
+			if ($type == "driver") {
+				if (!$user->approved) {
+					$response['code'] = 403;
+					$response['message'] = 'User not approved.';
+					return $response;
+				}
+			}
 			$response['message'] = 200;
 			return $response;
 		}
 		//OTP
 		$user = $model::where('phone_number', $request->input('phone_number'))->first();
 		if ($user) {
+			if ($type == "driver") {
+				if (!$user->approved) {
+					$response['code'] = 403;
+					$response['message'] = 'User not approved.';
+					return $response;
+				}
+			}
 			$digits = 4;
 			$user->otp = $this->getOTP();
 			$user->verified = 0;
