@@ -327,9 +327,14 @@ class AuthController extends Controller {
 		$user_details["password"] = $password;
 		$chk = $this->storeCustomer($request);
 		if (!$chk['exist']) {
-			$response['result'] = $this->getCustomer($request);
+			$customerObj = $this->getCustomer($request);
+			$response['result'] = $customerObj;
 			$response['message'] = "Registered Successfully";
-			$this->sendMail1($request);
+			$otp_enabled = \Config::get('constants.enable_otp');
+			if ($otp_enabled) {
+				send_sms("Your OTP is: " . $customerObj->otp, $customerObj->phone_number);
+			}
+			// $this->sendMail1($request);
 			return $response;
 		} else {
 			//$response['message'] = $chk['error'];
@@ -403,7 +408,6 @@ class AuthController extends Controller {
 			'cost' => 12,
 		];
 		$input = $request->all();
-		$digits = 4;
 		$otp = $this->getOTP();
 		$input['otp'] = $otp;
 		$email = $request['email'];
@@ -515,10 +519,15 @@ class AuthController extends Controller {
 		$user_details["password"] = $password;
 		$chk = $this->storeDriver($request);
 		if (!$chk['exist']) {
-			$response['result'] = $this->getDriver($request);
+			$driverObj = $this->getDriver($request);
+			$response['result'] = $driverObj;
 			$response['message'] = "Registered Successfully";
+			$otp_enabled = \Config::get('constants.enable_otp');
+			if ($otp_enabled) {
+				send_sms("Your OTP is: " . $driverObj->otp, $driverObj->phone_number);
+			}
 
-			$this->sendMail($request);
+			// $this->sendMail($request);
 			return $response;
 		} else {
 			// $response['message'] = $chk;
