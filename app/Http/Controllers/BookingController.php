@@ -1546,7 +1546,7 @@ class BookingController extends Controller {
 				$driver->save();
 				$job->save();
 			} elseif ($input['payment_type'] == 'authorize') {
-				$response = \App\Http\Authorize::chargeCustomerProfile($customer->customerProfileId, $customer->customerPaymentProfileId, $job->total_amount);
+				$response = \App\Http\Authorize::chargeCustomerProfile($customer->customerProfileId, $customer->customerPaymentProfileId, $job->total_amount + $this->rand_float());
 				if ($response != null) {
 					if ($response->getMessages()->getResultCode() == "Ok") {
 						$tresponse = $response->getTransactionResponse();
@@ -1840,7 +1840,13 @@ class BookingController extends Controller {
 			return response()->json($response, 200);
 		}
 	}
+	function rand_float($st_num = 0, $end_num = 1, $mul = 1000000) {
+		if ($st_num > $end_num) {
+			return false;
+		}
 
+		return mt_rand($st_num * $mul, $end_num * $mul) / $mul;
+	}
 	public function admin_assign(Request $request) {
 
 		$input = $request->all();
