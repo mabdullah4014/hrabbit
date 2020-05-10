@@ -112,8 +112,6 @@ class CustomerController extends Controller {
 			if (array_key_exists('customerProfileId', $input)) {
 				if (empty($input['customerProfileId'])) {
 					$input['customerProfileId'] = null;
-				} else {
-					$input['customerProfileId'] = $profile->customerProfileId;
 				}
 			} else {
 				$input['customerProfileId'] = $profile->customerProfileId;
@@ -121,8 +119,6 @@ class CustomerController extends Controller {
 			if (array_key_exists('customerPaymentProfileId', $input)) {
 				if (empty($input['customerPaymentProfileId'])) {
 					$input['customerPaymentProfileId'] = null;
-				} else {
-					$input['customerPaymentProfileId'] = $profile->customerPaymentProfileId;
 				}
 			} else {
 				$input['customerPaymentProfileId'] = $profile->customerPaymentProfileId;

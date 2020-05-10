@@ -558,6 +558,7 @@ class DriverController extends Controller {
 			$form->select('status', 'Status')->options($status)->default(1)->rules('required');
 			$form->select('approved', 'Approved')->options([1 => 'Approved', 0 => 'Not Approved']);
 			$form->saving(function (Form $form) {
+				\Log::info("saving");
 				$digits = 4;
 				$otp = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
 				$form->otp = $otp;
@@ -595,6 +596,7 @@ class DriverController extends Controller {
 
 			});
 			$form->saved(function (Form $form) {
+				\Log::info("saved");
 				$email = $form->model()->email;
 				$user = Driver::where('email', '=', $email)->first();
 				if (is_object($user) && ($user->created_at == $user->updated_at)) {

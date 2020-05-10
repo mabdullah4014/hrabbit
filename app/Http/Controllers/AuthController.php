@@ -918,6 +918,7 @@ class AuthController extends Controller {
 				$user->verified = 1;
 				$user->save();
 				$response['message'] = "200";
+				$response['result'] = $user;
 				return $response;
 			}
 		}
