@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Driver extends Model {
 	protected $fillable = [
-		'name', 'last_name', 'password', 'email', 'country_name', 'user_photo', 'vehicle_id', 'phone_number', 'device_id', 'vehicle_num', 'vehicle_type', 'license_no', 'city', 'address', 'otp', 'id_proof', 'experience', 'insurance', 'reg_sticker', 'referral_code', 'vehicle_color_id', 'vehicle_make_id', 'vehicle_model_id',
+		'name', 'last_name', 'password', 'email', 'country_name', 'user_photo', 'vehicle_id', 'phone_number', 'device_id', 'vehicle_num', 'vehicle_type', 'license_no', 'city', 'address', 'otp', 'id_proof', 'experience', 'insurance', 'reg_sticker', 'referral_code', 'vehicle_color_id', 'vehicle_make_id', 'vehicle_model_id', 'approved',
 	];
 
 	public function DriverCheckin() {
