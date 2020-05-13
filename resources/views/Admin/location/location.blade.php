@@ -17,10 +17,10 @@
         <!-- GeoFire -->
         <script src="/js/geofire.min_410.js"></script>
 
-        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAIxjlRcjDDzdyVOjYdXojTifTo6C0ApKY"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key={{env('GOOGLE_MAP_API_KEY')}}"></script>
             <!-- GeoFire -->
         <script type="text/javascript">
-              $(document).ready(function(){    
+              $(document).ready(function(){
                   //Check if the current URL contains '#'
                   if(document.URL.indexOf("#")==-1){
                       // Set the URL to whatever it was plus "#".
