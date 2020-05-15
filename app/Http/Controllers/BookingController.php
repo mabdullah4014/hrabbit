@@ -211,7 +211,7 @@ class BookingController extends Controller {
 
 					$driver->d_lat = $input['latitude'];
 					$driver->d_lon = $input['longitude'];
-					$driver->checkin_time = isset($input['checkin_time']) ? $input['checkin_time'] : $driver->checkin_time;
+					$driver->checkin_time = date('H:i:s');
 					$driver->today_date = date('Y-m-d');
 					$driver->checkin_time = date('H:i:s');
 					$driver->checkin_status = isset($input['checkin_status']) ? $input['checkin_status'] : "1";

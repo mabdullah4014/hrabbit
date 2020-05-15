@@ -460,9 +460,9 @@ class DriverController extends Controller {
 
 				// If it is not an edit state, add field unique verification
 				if (!$id = $form->model()->id) {
-					return 'required|unique:customers,email|unique:drivers,email';
+					return 'unique:drivers,email';
 				} else {
-					return 'required|unique:customers,email|unique:drivers,email,' . $form->model()->id;
+					return 'unique:drivers,email,' . $form->model()->id;
 				}
 
 			});
@@ -471,9 +471,9 @@ class DriverController extends Controller {
 
 				// If it is not an edit state, add field unique verification
 				if (!$id = $form->model()->id) {
-					return 'required|regex:/^\+[0-9]+$/|min:10|unique:drivers,phone_number|unique:customers,phone_number';
+					return 'required|regex:/^\+[0-9]+$/|min:10|unique:drivers,phone_number';
 				} else {
-					return 'required|regex:/^\+[0-9]+$/|min:10|unique:customers,phone_number|unique:drivers,phone_number,' . $form->model()->id;
+					return 'required|regex:/^\+[0-9]+$/|min:10|unique:drivers,phone_number,' . $form->model()->id;
 				}
 
 			})->help('<span style="color:#dd4b39;">Phone Number like it should be added with country code and + symbol and Hyphen eg. (+91-9757879366)</span>');
