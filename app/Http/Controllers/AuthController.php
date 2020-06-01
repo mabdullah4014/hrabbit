@@ -307,8 +307,7 @@ class AuthController extends Controller {
 		$input = $request->all();
 		$validator = Validator::make($input, [
 			'email' => 'required',
-			'password' => 'required',
-			'password' => 'required',
+			// 'password' => 'required',
 			'phone_number' => 'required',
 			'name' => 'required',
 			'last_name' => 'required',
@@ -326,10 +325,10 @@ class AuthController extends Controller {
 		//	if ($input['mode'] == "add") {
 		$id = $request->input('devicetoken');
 		$email = $request->input('email');
-		$password = $request->input('password');
+		// $password = $request->input('password');
 		$user_details["devicetoken"] = $id;
 		$user_details["email"] = $email;
-		$user_details["password"] = $password;
+		// $user_details["password"] = $password;
 		$chk = $this->storeCustomer($request);
 		if (!$chk['exist']) {
 			$customerObj = $this->getCustomer($request);
@@ -419,7 +418,7 @@ class AuthController extends Controller {
 
 		$check = $this->checkCustomer($request);
 		if (!$check['exist']) {
-			$input['password'] = password_hash($request->password, PASSWORD_DEFAULT, $options);
+			// $input['password'] = password_hash($request->password, PASSWORD_DEFAULT, $options);
 			$input['status'] = 1;
 			//$input['country']=$request->input('country_code');
 			$user = customer::create($input);
@@ -504,13 +503,14 @@ class AuthController extends Controller {
 			'name' => 'required',
 			'last_name' => 'required',
 			'device_id' => 'required',
-			'vehicle_num' => 'required',
+			'vin_num' => 'required',
 			'vehicle_type' => 'required',
 			'vehicle_id' => 'required',
 			'license_no' => 'required',
 			'document' => 'required',
 			'img_insurance' => 'required',
 			'img_reg_sticker' => 'required',
+			'img_car_photo' => 'required',
 		]);
 		if ($validator->fails()) {
 			return $this->sendError('Invalid Params.', $validator->errors());
@@ -630,6 +630,12 @@ class AuthController extends Controller {
 			$photoName1 = 'uploads/DriverProof/' . time() . '_' . Str::random(16) . '.' . $file->getClientOriginalExtension();
 			$path = $request->img_experience->move('uploads/DriverProof', $photoName1);
 			$input['experience'] = $photoName1;
+		}
+		if ($request->hasFile('img_car_photo')) {
+			$file = $request->img_car_photo;
+			$photoName1 = 'uploads/DriverProof/' . time() . '_' . Str::random(16) . '.' . $file->getClientOriginalExtension();
+			$path = $request->img_car_photo->move('uploads/DriverProof', $photoName1);
+			$input['img_car_photo'] = $photoName1;
 		}
 
 		$check = $this->checkDriver($request);

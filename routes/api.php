@@ -36,7 +36,7 @@ Route::post('user/verifyOtp', 'AuthController@verifyOtp');
 Route::post('customer/add', 'AuthController@addCustomer');
 Route::post('driver/add', 'AuthController@addDriver');
 Route::post('driver/sendOTP', 'AuthController@sendOTP');
-Route::post('customer/changePass', 'AuthController@changePass');
+// Route::post('customer/changePass', 'AuthController@changePass');
 Route::post('driver/changePass', 'AuthController@changePassDriver');
 Route::post('driver/sendOTP', 'AuthController@sendOTP');
 Route::post('driver/forgetPassword', 'AuthController@forgetPasswordDriver');

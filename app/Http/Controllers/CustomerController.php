@@ -185,13 +185,15 @@ class CustomerController extends Controller {
 			'driver_rating' => 'required',
 			'cab_rating' => 'required',
 			'overall_rating' => 'required',
-			'comments' => 'required',
+			// 'comments' => 'required',
 		]);
 		if ($validator->fails()) {
 			return $this->sendError('Invalid Params.', $validator->errors());
 		}
 		$input['status'] = 1;
-		$input['comments'] = str_replace("%20", " ", $input['comments']);
+		if (isset($input['comments']) && !empty($input['comments'])) {
+			$input['comments'] = str_replace("%20", " ", $input['comments']);
+		}
 		$feedback = CustomerFeedback::create($input);
 		if ($feedback) {
 			$response['message'] = 'feedback saved.';
