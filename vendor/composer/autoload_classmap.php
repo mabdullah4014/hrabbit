@@ -84,6 +84,7 @@ return array(
     'App\\Invoice' => $baseDir . '/app/Invoice.php',
     'App\\Language' => $baseDir . '/app/Language.php',
     'App\\MobileVerification' => $baseDir . '/app/MobileVerification.php',
+    'App\\Observers\\DriverObserver' => $baseDir . '/app/Observers/DriverObserver.php',
     'App\\PaypalPayout' => $baseDir . '/app/PaypalPayout.php',
     'App\\Providers\\AppServiceProvider' => $baseDir . '/app/Providers/AppServiceProvider.php',
     'App\\Providers\\AuthServiceProvider' => $baseDir . '/app/Providers/AuthServiceProvider.php',

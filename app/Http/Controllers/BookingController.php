@@ -905,6 +905,10 @@ class BookingController extends Controller {
 				$data['latitude'] = $input['pickup_lat'];
 				$data['longitude'] = $input['pickup_lon'];
 				$data['vehicle_id'] = $input['vehicle_id'];
+				if (isset($input['favorite_driver_id']) && !empty($input['favorite_driver_id'])) {
+					$id = explode("_", $input['favorite_driver_id'])[1];
+					$data['favorite_driver_id'] = $id;
+				}
 				// $driverList = $this->driverList($data);
 				$driverList = $this->available_drivers($data);
 				if (count($driverList) > 0) {
@@ -2665,7 +2669,13 @@ class BookingController extends Controller {
 							if (@$driver['status'] == 1 && $driver['l'][0] != 0 && $driver['l'][1] != 0) {
 								$distance = $this->getDistance($c_lat, $c_lon, $driver['l'][0], $driver['l'][1]);
 								if ($distance <= $radius) {
-									$result[] = $driver_profile->toArray();
+									if (isset($data["id"]) && $key == $data["id"]) {
+										$result = array();
+										$result[] = $driver_profile->toArray();
+										return $result;
+									} else {
+										$result[] = $driver_profile->toArray();
+									}
 								}
 							}
 						}

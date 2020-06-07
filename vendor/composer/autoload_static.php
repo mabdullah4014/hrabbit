@@ -666,6 +666,7 @@ class ComposerStaticInit32981c517ff38ba86dd1115147e2c6cf
         'App\\Invoice' => __DIR__ . '/../..' . '/app/Invoice.php',
         'App\\Language' => __DIR__ . '/../..' . '/app/Language.php',
         'App\\MobileVerification' => __DIR__ . '/../..' . '/app/MobileVerification.php',
+        'App\\Observers\\DriverObserver' => __DIR__ . '/../..' . '/app/Observers/DriverObserver.php',
         'App\\PaypalPayout' => __DIR__ . '/../..' . '/app/PaypalPayout.php',
         'App\\Providers\\AppServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AppServiceProvider.php',
         'App\\Providers\\AuthServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AuthServiceProvider.php',
