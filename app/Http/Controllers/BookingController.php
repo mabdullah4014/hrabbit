@@ -2669,7 +2669,7 @@ class BookingController extends Controller {
 							if (@$driver['status'] == 1 && $driver['l'][0] != 0 && $driver['l'][1] != 0) {
 								$distance = $this->getDistance($c_lat, $c_lon, $driver['l'][0], $driver['l'][1]);
 								if ($distance <= $radius) {
-									if (isset($data["id"]) && $key == $data["id"]) {
+									if (isset($data["favorite_driver_id"]) && $key == $data["favorite_driver_id"]) {
 										$result = array();
 										$result[] = $driver_profile->toArray();
 										return $result;
