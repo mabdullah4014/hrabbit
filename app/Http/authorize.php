@@ -12,9 +12,15 @@ class Authorize {
 		$merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
 		\Log::info(env('MERCHANT_LOGIN_ID'));
 		\Log::info(env('MERCHANT_TRANSACTION_KEY'));
-		$merchantAuthentication->setName(env('MERCHANT_LOGIN_ID'));
-		$merchantAuthentication->setTransactionKey(env('MERCHANT_TRANSACTION_KEY'));
 
+		$isProd = env('IS_AUTHORIZE_PROD');
+		if ($isProd) {
+			$merchantAuthentication->setName(env('MERCHANT_LOGIN_ID_PROD'));
+			$merchantAuthentication->setTransactionKey(env('MERCHANT_TRANSACTION_KEY_PROD'));
+		} else {
+			$merchantAuthentication->setName(env('MERCHANT_LOGIN_ID'));
+			$merchantAuthentication->setTransactionKey(env('MERCHANT_TRANSACTION_KEY'));
+		}
 		// Set the transaction's refId
 		$refId = 'ref' . time();
 
@@ -34,7 +40,11 @@ class Authorize {
 		$request->setRefId($refId);
 		$request->setTransactionRequest($transactionRequestType);
 		$controller = new AnetController\CreateTransactionController($request);
-		$response = $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::SANDBOX);
+		if (!$isProd) {
+			$response = $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::SANDBOX);
+		} else {
+			$response = $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::PRODUCTION);
+		}
 		\Log::info(json_encode($response));
 		if ($response != null) {
 			if ($response->getMessages()->getResultCode() == "Ok") {
