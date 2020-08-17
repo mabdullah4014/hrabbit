@@ -59,7 +59,7 @@ a:hover {
     text-decoration: none;
 }
 a:focus, a:hover {
-    color: #6847a2;
+    color: #196f8d;
    
 }
 .no-margin {
@@ -139,7 +139,7 @@ a:focus, a:hover {
 .nav>li.active>a:focus,
 .nav>li.active>a:hover {
     text-decoration: none;
-    background-color: #6847a2;
+    background-color: #196f8d;
     color: #fff;
 }
 
@@ -160,7 +160,7 @@ a:focus, a:hover {
     bottom: 0;
     left: 0;
     right: 0;
-    background-color:rgba(104, 71, 162, 0.70);
+    background-color:#196f8d;
 }
 
 .banner-head {
@@ -213,17 +213,17 @@ a:focus, a:hover {
     font-size: 12px;
     font-weight: 600;
     letter-spacing: 1px;
-    color: #6847a2;
+    color: #196f8d;
 }
 .banner-form h5:hover{
-    color: #6847a2 !important;
+    color: #196f8d !important;
 }
 
 .banner-form h5 i:hover{
-    color: #6847a2 !important;
+    color: #196f8d !important;
 }
 .banner-form h5 i {
-    color: #6847a2 !important;
+    color: #196f8d !important;
     -webkit-transition: all .1s cubic-bezier(.9, 0, .1, 1);
     transition: all .1s cubic-bezier(.9, 0, .1, 1);
 }
@@ -249,7 +249,7 @@ a:focus, a:hover {
 }
 
 .note-or a {
-    color: #6847a2;
+    color: #196f8d;
 }
 
 .note-or:hover a,
@@ -264,7 +264,7 @@ a:focus, a:hover {
     margin: 10px;
     font-weight: 500;
     font-size: 16px !important;
-    background-color: #6847a2;
+    background-color: #196f8d;
     color: #fff;
     border-radius: 30px;
     box-shadow: 1px 1px 5px #998daf;
@@ -317,7 +317,7 @@ a:focus, a:hover {
     font-size: 12px;
     font-weight: 600;
     letter-spacing: 1px;
-    color: #6847a2;
+    color: #196f8d;
 }
 
 .content-more i {
@@ -372,7 +372,7 @@ a:focus, a:hover {
     font-size: 12px;
     font-weight: 600;
     letter-spacing: 1px;
-    background-color: #6847a2;
+    background-color: #196f8d;
     color: #fff;
     padding: 15px 20px;
     display: inline-block;
@@ -380,7 +380,7 @@ a:focus, a:hover {
 }
 
 .content-more-btn i {
-    /*background-color: #6847a2;*/
+    /*background-color: #196f8d;*/
     color: #fff;
     -webkit-transition: all .1s cubic-bezier(.9, 0, .1, 1);
     transition: all .1s cubic-bezier(.9, 0, .1, 1);
@@ -437,7 +437,7 @@ a:focus, a:hover {
     border: none !important;
     border-radius: 0;
     padding: 25px 50px;
-    background-color: #6847a2;
+    background-color: #196f8d;
 }
 /*.find-form span button {
     border: 0;
@@ -445,7 +445,7 @@ a:focus, a:hover {
     border-radius: 0;
     height: 45px;
     padding: 10px 20px;
-    background-color: #6847a2;
+    background-color: #196f8d;
 }*/
 
 .find-form span button i {
@@ -922,9 +922,9 @@ html {
 .car-tab .nav-tabs li a:hover,
 .car-tab .nav-tabs li a:focus,
 .car-tab .nav-tabs li a:active {
-    color: #6847a2;
+    color: #196f8d;
     border: 0;
-    border-bottom: 4px solid #6847a2!important;
+    border-bottom: 4px solid #196f8d!important;
     background-color: transparent;
 }
 
@@ -984,7 +984,7 @@ html {
     border-radius: 0;
     height: 45px;
     padding: 10px 20px;
-    background-color: #6847a2;
+    background-color: #196f8d;
 }
 
 .fare-form span button i {
@@ -1043,7 +1043,7 @@ html {
     
     padding: 10px;
     
-    background-color: #6847a2;
+    background-color: #196f8d;
     color: #fff;
     text-align: left;
     display: block;
@@ -1158,7 +1158,7 @@ html {
 }
 
 .log-teal-btn {
-    background-color: #6847a2;
+    background-color: #196f8d;
     padding: 20px;
     display: block;
     color: #fff;
@@ -1173,7 +1173,7 @@ html {
 .log-teal-btn:hover,
 .log-teal-btn:focus,
 .log-teal-btn:active {
-    background-color: #6847a2;
+    background-color: #196f8d;
     color: #fff;
 }
 
@@ -1204,13 +1204,13 @@ html {
 }
 
 .helper a {
-    color: #6847a2;
+    color: #196f8d;
 }
 
 .helper a:hover,
 .helper a:focus,
 .helper a :active {
-    color: #6847a2;
+    color: #196f8d;
     text-decoration: none;
 }
 
@@ -1351,7 +1351,7 @@ input[type=checkbox] {
 }
 
 .more-btn{
-    background-color: #6847a2;
+    background-color: #196f8d;
     box-shadow: 1px 1px 5px #998daf;
     padding: 15px 20px;
     color: #fff;
@@ -1375,7 +1375,7 @@ input[type=checkbox] {
 .btn-title{    /*text-transform: uppercase;*/
     font-size: 25px;
     font-weight: 600;
-    color: #6847a2;
+    color: #196f8d;
     text-align: center;    font-family: sans-serif;}
 
     .btn-icon {
@@ -1402,7 +1402,7 @@ input[type=checkbox] {
     margin: 10px;
     font-weight: 500;
     font-size: 16px !important;
-    background-color: #6847a2;
+    background-color: #196f8d;
     color: #fff;
     border-radius: 30px;
     box-shadow: 1px 1px 5px #998daf;
@@ -1440,7 +1440,7 @@ input[type=checkbox] {
 }
 .white{color: #ffffff;}
 .socil-media ul li i {
-    color: #6847a2;
+    color: #196f8d;
 }
 .footer-social h2 {
     margin-bottom: 40px;
@@ -1465,8 +1465,8 @@ input[type=checkbox] {
     font-weight: 500;
     font-size: 16px !important;
     background-color: transparent;
-    border: 1px solid #6847a2;
-    color: #6847a2;
+    border: 1px solid #196f8d;
+    color: #196f8d;
     border-radius: 30px;
     box-shadow: 1px 1px 10px #cec8d8;
         transition: .2s all;
@@ -1474,7 +1474,7 @@ input[type=checkbox] {
 span.phone-icon i {
     position: relative;
     top: 20px;
-    color: #6847a2;
+    color: #196f8d;
 }
 *{outline: none;}
 
@@ -1499,9 +1499,9 @@ span.phone-icon i {
     margin-top: 8px;
     margin-right: 15px;
     margin-bottom: 8px;
-    background-color: #6847a2;
+    background-color: #196f8d;
     background-image: none;
-    border: 1px solid #6847a2;
+    border: 1px solid #196f8d;
     border-radius: 4px;
 }
 .navbar-toggle .icon-bar {
