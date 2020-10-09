@@ -48,6 +48,8 @@ Route::group([
 	$router->resource('pay_to_driver', DriverPayoutController::class);
 	$router->resource('setting', AppSettingController::class);
 	$router->resource('paypal', AdaptivePaypalSettingController::class);
+	$router->resource('fare', FareCalculationSettingController::class);
+	$router->resource('commission', CommissionCalculationSettingController::class);
 	$router->resource('mobile', MobileVerificationController::class);
 
 	$router->resource('demo/users', UserController::class);

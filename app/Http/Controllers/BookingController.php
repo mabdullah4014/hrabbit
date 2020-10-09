@@ -1412,6 +1412,7 @@ class BookingController extends Controller {
 				return $response;
 			}
 			$job->pick_up_time = $ctime->toTimeString();
+			$job->driver_wait_end_time = $ctime;
 			$job->status = 3;
 			if ($job->save()) {
 				$driver = Driver::where('id', $job->driver_id)->first();
@@ -1550,7 +1551,7 @@ class BookingController extends Controller {
 				$driver->save();
 				$job->save();
 			} elseif ($input['payment_type'] == 'authorize') {
-				$response = \App\Http\Authorize::chargeCustomerProfile($customer->customerProfileId, $customer->customerPaymentProfileId, $job->total_amount + $this->rand_float());
+				$response = \App\Http\Authorize::chargeCustomerProfile($customer->customerProfileId, $customer->customerPaymentProfileId, $job->total_amount);
 				if ($response != null) {
 					if ($response->getMessages()->getResultCode() == "Ok") {
 						$tresponse = $response->getTransactionResponse();
@@ -1835,6 +1836,67 @@ class BookingController extends Controller {
 				$data['cancel_status'] = 1;
 				$data['drop_time'] = $ctime->toTimeString();
 				$this->updateFirebase($data);
+			} else {
+				$message['code'] = 500;
+				$message['error'] = 'Not saved.';
+				$response['message'] = $message;
+				return response()->json($response, 200);
+			}
+			return response()->json($response, 200);
+		} elseif ($input['mode'] == 'pick_time') {
+			$input = $request->all();
+			$ctime = Carbon::now();
+			$ctime->toTimeString();
+			$validator = Validator::make($input, [
+				'booking_id' => 'required',
+				'pickup_lat' => 'required',
+				'pickup_lon' => 'required',
+			]);
+			if ($validator->fails()) {
+				return $this->sendError('Validation Error.' . $validator->errors());
+			}
+			$job = DriverTrip::where('id', $input['booking_id'])->first();
+
+			$job->driver_pick_start_lat = $input['pickup_lat'];
+			$job->driver_pick_start_lon = $input['pickup_lon'];
+			$job->driver_pick_start_time = $ctime;
+			$job->status = 21;
+			if ($job->save()) {
+				$response = [
+					'result' => $input,
+					'message' => "Request saved successfully.",
+				];
+			} else {
+				$message['code'] = 500;
+				$message['error'] = 'Not saved.';
+				$response['message'] = $message;
+				return response()->json($response, 200);
+			}
+			return response()->json($response, 200);
+		} elseif ($input['mode'] == 'wait_time') {
+			$input = $request->all();
+			$ctime = Carbon::now();
+			$ctime->toTimeString();
+			$validator = Validator::make($input, [
+				'booking_id' => 'required',
+				'pickup_lat' => 'required',
+				'pickup_lon' => 'required',
+			]);
+			if ($validator->fails()) {
+				return $this->sendError('Validation Error.' . $validator->errors());
+			}
+			$job = DriverTrip::where('id', $input['booking_id'])->first();
+
+			$job->driver_pick_end_time = $ctime;
+			$job->driver_wait_start_lat = $input['pickup_lat'];
+			$job->driver_wait_start_lon	 = $input['pickup_lon'];
+			$job->driver_wait_start_time = $ctime;
+			$job->status = 22;
+			if ($job->save()) {
+				$response = [
+					'result' => $input,
+					'message' => "Request saved successfully.",
+				];
 			} else {
 				$message['code'] = 500;
 				$message['error'] = 'Not saved.';
@@ -2700,6 +2762,44 @@ class BookingController extends Controller {
 		return $d;
 	}
 
+	public function getTripFare($tripId) {
+		$trip = DriverTrip::where('id', $trip)->first();
+		if($trip){
+			$pick_mileage = $this->getDistanceBetweenTwoLocations($trip->driver_pick_start_lat, $trip->driver_pick_start_lon, $trip->pickup_lat, $trip->pickup_lon);
+			$to = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_pick_end_time);
+			$from = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_pick_start_time);
+			$pick_time = $to->diffInMinutes($from);
+			$trip_mileage = $this->getDistanceBetweenTwoLocations($trip->pickup_lat, $trip->pickup_lon, $trip->drop_lat, $trip->drop_lon);
+			$fareSetting = \App\FareCalculationSetting::orderBy('id','desc')->first();	
+			$mileage_limit = 5;
+			$wait_to = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_wait_end_time);
+			$wait_from = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_wait_start_time);
+			$wait_time = $wait_to->diffInMinutes($wait_from);
+			$drive_to = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_pick_end_time);
+			$drive_from = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_pick_start_time);
+			$drive_time = $wait_to->diffInMinutes($wait_from);
+			if($fareSetting){
+				$mileage_limit = $fareSetting->mileage_limit;
+				if($trip_mileage <= $mileage_limit){
+				}
+			}
+			$commissionSetting = \App\CommissionCalculationSetting::orderBy('id','desc')->first();	
+		}
+	}
+	public function getDistanceBetweenTwoLocations($latitude1, $longitude1, $latitude2, $longitude2, $unit = 'Mi') {
+		$theta = $longitude1 - $longitude2; 
+		$distance = (sin(deg2rad($latitude1)) * sin(deg2rad($latitude2))) + (cos(deg2rad($latitude1)) * cos(deg2rad($latitude2)) * cos(deg2rad($theta))); 
+		$distance = acos($distance); 
+		$distance = rad2deg($distance); 
+		$distance = $distance * 60 * 1.1515; 
+		switch($unit) { 
+			case 'Mi': 
+			break; 
+			case 'Km' : 
+			$distance = $distance * 1.609344; 
+		} 
+		return (round($distance,2)); 
+	}
 	protected function driverList($data) {
 		$c_lat = $data['latitude'];
 		$c_lon = $data['longitude'];

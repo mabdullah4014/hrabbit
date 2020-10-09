@@ -37,7 +37,7 @@
         <footer class="main-footer">
    
     <!-- Default to the left -->
-    <strong>Powered by <a href="javascript:void(0);" target="_blank">Houston-Rabbit</a></strong>
+    <strong>Powered by <a href="javascript:void(0);" target="_blank">vCabb</a></strong>
 </footer>
         <!-- /.sidebar-menu -->
     </section>
