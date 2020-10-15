@@ -800,7 +800,17 @@ class BookingController extends Controller {
 	}
 
 	public function charge(Request $request) {
-		$response = \App\Http\Authorize::chargeCustomerProfile(1511625573, 1511545206, 1.5);
+		$response = \App\Http\Authorize::chargeCustomerProfile(1512111009, 1512246738, 1.5);
+		\Log::info(json_encode($response));
+		return response()->json($response, 200);
+	}
+	public function getProfile(Request $request) {
+		$response = \App\Http\Authorize::getCustomerProfile(1512211009);
+		\Log::info(json_encode($response));
+		return response()->json($response, 200);
+	}
+	public function refund(Request $request) {
+		$response = \App\Http\Authorize::refundTransaction("XXXX1111", "XXXX", 2, "40051903304");
 		\Log::info(json_encode($response));
 		return response()->json($response, 200);
 	}
@@ -848,7 +858,52 @@ class BookingController extends Controller {
 
 				$customer = Customer::find($customer->id);
 			}
+			
+			$total_distance = $this->getDistanceBetweenTwoLocations($input['pickup_lat'], $input['pickup_lon'], $input['drop_lat'], $input['drop_lon'], "Km");
+			$input['estimated_distance'] = round($total_distance, 3);
+			info($input['estimated_distance']);
+			$vehicaleCategory = VehicleCategory::where('id', $input['vehicle_id'])->first();
+			$vehicle_type = $vehicaleCategory->vehicle_type;
+			$base = VehicleCategory::where('vehicle_type', $vehicle_type)->first();
+			$base_fare = $base->base_fare;
+			info($base_fare);
+			$price_per_km = $base->price_per_km;
+			info($price_per_km);
+			$total_cost = $input['estimated_distance'] * $price_per_km;
+			info($total_cost);
+			$input['advance_amount'] = $total_cost + $base_fare;
+			info($input['advance_amount']);
 
+			$paymentResponse = \App\Http\Authorize::chargeCustomerProfile($customer->customerProfileId, $customer->customerPaymentProfileId, $input['advance_amount']);
+			info($paymentResponse);
+			if ($paymentResponse != null) {
+				if ($paymentResponse['resultCode'] == "Ok") {
+					$tresponse = $paymentResponse['transaction'];
+					if ($tresponse != null) {
+						$input['advance_transaction_id'] = $tresponse['transId'];
+						$input['payment_status'] = "1";
+						$input['payment_name'] = "authorize";
+					}
+					else {
+						info("1");
+						$response['code'] = 500;
+						$response['message'] = 'failure';
+						return response()->json($response, 200);
+					}
+				}
+				else {
+					info("2");
+					$response['code'] = 500;
+					$response['message'] = 'failure';
+					return response()->json($response, 200);
+				}
+			}
+			else {
+				info("3");
+				$response['code'] = 500;
+				$response['message'] = 'failure';
+				return response()->json($response, 200);
+			}
 			$input['trip_num'] = str_random(4);
 			$input['cus_id'] = $input['customer_id'];
 			$input['customer_name'] = $customer->name;
@@ -880,6 +935,7 @@ class BookingController extends Controller {
 
 			$digits = 5;
 			$input['trip_num'] = rand(pow(10, $digits - 1), pow(10, $digits) - 1);
+
 			if (isset($input['booking_id']) && $input['booking_id'] != 0) {
 				//unset($input['customer_email']);
 				//unset($input['customer_id']);
@@ -1456,29 +1512,23 @@ class BookingController extends Controller {
 			$job->drop_lat = isset($input['drop_lat']) ? $input['drop_lat'] : $job->drop_lat;
 			$job->drop_lon = isset($input['drop_lon']) ? $input['drop_lon'] : $job->drop_lon;
 
-			$total_distance = isset($input['total_distance']) ? $input['total_distance'] : 0;
-			/*$kmArr = explode(" ", $total_distance);
-				if (count($kmArr) > 1) {
-					if (isset($kmArr[1]) && strtolower($kmArr[1]) == "m") {
-						$job->total_distance = $kmArr[0] / 1000;
-					} else {
-						$job->total_distance = $kmArr[0];
-					}
-			*/
-			$job->total_distance = round($total_distance, 3);
-			//	$job->total_distance = isset($input['total_distance']) ? $input['total_distance'] :$job->total_distance;
-
+			$job->drop_off_time = $ctime;
+			
 			$job->drop_location = isset($input['drop_location']) ? $input['drop_location'] : $job->drop_location;
 			$job->status = 4;
+			$total_distance = isset($input['total_distance']) ? $input['total_distance'] : 0;
+			$job->total_distance = round($total_distance, 3);
+			
 			$vehicle_type = $job->vehicle_type;
 			$base = VehicleCategory::where('vehicle_type', $vehicle_type)->first();
 			$base_fare = $base->base_fare;
-			$price_per_km = $base->price_per_km;
-			$total_cost = $job->total_distance * $price_per_km;
-			$total_amount = $total_cost + $base_fare;
+			$price_per_km = $job->price_km;
 
-			$job->total_amount = $total_amount;
 			if ($job->save()) {
+				$total_amount = $this->getTripFare($job->id);
+				$job->total_amount = round($total_amount, 3);
+				$job->commission = $this->getCommission($job->total_amount);
+				$job->save();
 				$response = [
 					'result' => $input,
 					'message' => "Trip Completed",
@@ -1551,41 +1601,34 @@ class BookingController extends Controller {
 				$driver->save();
 				$job->save();
 			} elseif ($input['payment_type'] == 'authorize') {
-				$response = \App\Http\Authorize::chargeCustomerProfile($customer->customerProfileId, $customer->customerPaymentProfileId, $job->total_amount);
-				if ($response != null) {
-					if ($response->getMessages()->getResultCode() == "Ok") {
-						$tresponse = $response->getTransactionResponse();
-						if ($tresponse != null && $tresponse->getMessages() != null) {
-							$job->payment_status = "1";
-							$job->payment_name = "authorize";
-							$job->status = 6;
-							$job->paypal_id = $tresponse->getTransId();
-							$total_amount = $job->total_amount;
-							$commission_percent = VehicleCategory::where('id', $job->vehicle_id)->first();
-							$commission_percentage = $commission_percent->commission_percentage;
-							$commission = $total_amount * $commission_percentage;
-							$total_commission = $commission / 100;
-							$job->commission = $total_commission;
-							$total = $total_amount - $total_commission;
-							$driver = Driver::where('id', $input['driver_id'])->first();
-							$driver->wallet = $driver->wallet + $total;
-							$driver->save();
-							$job->save();
-						} else {
-							$message['code'] = 500;
-							$message['error'] = 'Not saved.';
-							$response['message'] = $message;
-							return response()->json($response, 200);
+				if($job->advance_amount < $job->total_amount){
+					$amountToCut = $job->total_amount - $job->advance_amount;
+					info("amountToCut");
+					info($amountToCut);
+					$response = \App\Http\Authorize::chargeCustomerProfile($customer->customerProfileId, $customer->customerPaymentProfileId, (string)$amountToCut);
+					if ($response != null) {
+						if ($response['resultCode'] == "Ok") {
+							$tresponse = $response['transaction'];
+							if ($tresponse != null) {
+								$job->transaction_id = $tresponse['transId'];
+							} 
 						}
-					} else {
-						$message['code'] = 500;
-						$message['error'] = 'Not saved.';
-						$response['message'] = $message;
-						return response()->json($response, 200);
 					}
 				}
-
+				else if($job->advance_amount - $job->total_amount > 0){
+					$refund = new \App\RefundTransaction();
+					$refund->trip_id = $job->id;
+					$refund->amount = $job->advance_amount - $job->total_amount;
+					$refund->save();
+				}
 			}
+			$job->status = 6;
+			$total_amount = $job->total_amount;
+			$total_commission = $job->commission;
+			$total = $total_amount - $total_commission;
+			$driver = Driver::where('id', $input['driver_id'])->first();
+			$driver->wallet = $driver->wallet + $total;
+			$driver->save();
 			$job->drop_time = $ctime;
 			if ($job->save()) {
 				$drivercheck = DriverCheckin::where('driver_id', $input['driver_id'])->first();
@@ -2762,29 +2805,47 @@ class BookingController extends Controller {
 		return $d;
 	}
 
+	public function getCommission($amount) {
+		$commissionSetting = \App\CommissionCalculationSetting::orderBy('id','desc')->get();	
+		foreach ($commissionSetting as $key => $setting) {
+			if($amount >= $setting->trip_charge_start && $amount <= $setting->trip_charge_end){
+				return $setting->commission;
+			}
+		}
+	}
 	public function getTripFare($tripId) {
-		$trip = DriverTrip::where('id', $trip)->first();
+		$trip = DriverTrip::where('id', $tripId)->first();
+		$total_fare = 0;
 		if($trip){
 			$pick_mileage = $this->getDistanceBetweenTwoLocations($trip->driver_pick_start_lat, $trip->driver_pick_start_lon, $trip->pickup_lat, $trip->pickup_lon);
 			$to = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_pick_end_time);
 			$from = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_pick_start_time);
 			$pick_time = $to->diffInMinutes($from);
-			$trip_mileage = $this->getDistanceBetweenTwoLocations($trip->pickup_lat, $trip->pickup_lon, $trip->drop_lat, $trip->drop_lon);
+			$trip_mileage = $trip->total_distance;
 			$fareSetting = \App\FareCalculationSetting::orderBy('id','desc')->first();	
 			$mileage_limit = 5;
 			$wait_to = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_wait_end_time);
 			$wait_from = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_wait_start_time);
 			$wait_time = $wait_to->diffInMinutes($wait_from);
-			$drive_to = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_pick_end_time);
-			$drive_from = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_pick_start_time);
-			$drive_time = $wait_to->diffInMinutes($wait_from);
+			$drop_off = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->drop_off_time);
+			$drive_time = $wait_to->diffInMinutes($drop_off);
 			if($fareSetting){
+				$total_fare = $pick_mileage * $fareSetting->pick_mileage +
+				$pick_time * $fareSetting->pick_time;
 				$mileage_limit = $fareSetting->mileage_limit;
 				if($trip_mileage <= $mileage_limit){
+					$total_fare += $wait_time * $fareSetting->wait_time;
+					$total_fare += $trip_mileage * $fareSetting->drive_mileage;
+					$total_fare += $drive_time * $fareSetting->drive_time;
+				}
+				else{
+					$total_fare += $wait_time * $fareSetting->wait_time_al;
+					$total_fare += $trip_mileage * $fareSetting->drive_mileage_al;
+					$total_fare += $drive_time * $fareSetting->drive_time_al;
 				}
 			}
-			$commissionSetting = \App\CommissionCalculationSetting::orderBy('id','desc')->first();	
 		}
+		return $total_fare;
 	}
 	public function getDistanceBetweenTwoLocations($latitude1, $longitude1, $latitude2, $longitude2, $unit = 'Mi') {
 		$theta = $longitude1 - $longitude2; 
