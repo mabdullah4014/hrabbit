@@ -677,6 +677,7 @@ class ComposerStaticInit32981c517ff38ba86dd1115147e2c6cf
         'App\\Providers\\BroadcastServiceProvider' => __DIR__ . '/../..' . '/app/Providers/BroadcastServiceProvider.php',
         'App\\Providers\\EventServiceProvider' => __DIR__ . '/../..' . '/app/Providers/EventServiceProvider.php',
         'App\\Providers\\RouteServiceProvider' => __DIR__ . '/../..' . '/app/Providers/RouteServiceProvider.php',
+        'App\\RefundTransaction' => __DIR__ . '/../..' . '/app/RefundTransaction.php',
         'App\\Settings' => __DIR__ . '/../..' . '/app/Settings.php',
         'App\\State' => __DIR__ . '/../..' . '/app/State.php',
         'App\\Status' => __DIR__ . '/../..' . '/app/Status.php',

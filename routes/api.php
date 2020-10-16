@@ -90,3 +90,6 @@ Route::get('booking/driverStatusUpdate', 'BookingController@driverStatusUpdate')
 Route::get('booking/charge', 'BookingController@charge');
 Route::get('booking/getProfile', 'BookingController@getProfile');
 Route::get('booking/refund', 'BookingController@refund');
+Route::get('booking/refundJobInitiate', function(){
+	dispatch(new \App\Jobs\RefundTransaction());
+});

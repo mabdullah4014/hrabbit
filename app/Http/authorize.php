@@ -137,7 +137,8 @@ class Authorize {
 				foreach($response->getSubscriptionIds() as $subscriptionid)
 				\Log::info($subscriptionid . "\n");
 			}
-			$data["customerProfile"] = $profileSelected;
+			$array = json_decode(json_encode($profileSelected), true);
+			$data["customerProfile"] = $array;
 			$data["resultCode"] = "Ok";
 			$data["message"] = [];
 			$data["message"]["text"] = $response->getMessages()->getMessage()[0]->getText();
@@ -172,25 +173,30 @@ class Authorize {
 		$refId = 'ref' . time();
 		$data = [];
 		
+		
 		$creditCard = new AnetAPI\CreditCardType();
 		$creditCard->setCardNumber($cardNumber);
 		$creditCard->setExpirationDate($expiryDate);
 		$paymentOne = new AnetAPI\PaymentType();
 		$paymentOne->setCreditCard($creditCard);
-
+		
 		$transactionRequest = new AnetAPI\TransactionRequestType();
 		$transactionRequest->setTransactionType( "refundTransaction"); 
 		$transactionRequest->setAmount($amount);
 		$transactionRequest->setPayment($paymentOne);
 		$transactionRequest->setRefTransId($refTransactionId);
-	
-
+		
+		
 		$request = new AnetAPI\CreateTransactionRequest();
 		$request->setMerchantAuthentication($merchantAuthentication);
 		$request->setRefId($refId);
 		$request->setTransactionRequest( $transactionRequest);
 		$controller = new AnetController\CreateTransactionController($request);
-		$response = $controller->executeWithApiResponse( \net\authorize\api\constants\ANetEnvironment::SANDBOX);
+		if (!$isProd) {
+			$response = $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::SANDBOX);
+		} else {
+			$response = $controller->executeWithApiResponse(\net\authorize\api\constants\ANetEnvironment::PRODUCTION);
+		}
 
 		if ($response != null)
 		{
@@ -204,7 +210,9 @@ class Authorize {
 					\Log::info("Refund SUCCESS: " . $tresponse->getTransId() . "\n");
 					\Log::info("Code : " . $tresponse->getMessages()[0]->getCode() . "\n"); 
 					\Log::info("Description : " . $tresponse->getMessages()[0]->getDescription() . "\n");
-					$data["transaction"] = $tresponse;
+					$data["transaction"] = [];
+					$data["transaction"]['messages'] = [];
+					$data["transaction"]['transId'] = $tresponse->getTransId();
 					$data["resultCode"] = "Ok";
 					$data["message"] = [];
 					$data["message"]["text"] = $response->getMessages()->getMessage()[0]->getText();

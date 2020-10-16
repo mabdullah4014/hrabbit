@@ -805,12 +805,12 @@ class BookingController extends Controller {
 		return response()->json($response, 200);
 	}
 	public function getProfile(Request $request) {
-		$response = \App\Http\Authorize::getCustomerProfile(1512211009);
+		$response = \App\Http\Authorize::getCustomerProfile(1511767855);
 		\Log::info(json_encode($response));
 		return response()->json($response, 200);
 	}
 	public function refund(Request $request) {
-		$response = \App\Http\Authorize::refundTransaction("XXXX1111", "XXXX", 2, "40051903304");
+		$response = \App\Http\Authorize::refundTransaction("XXXX1111", "XXXX", 2, "40049523347");
 		\Log::info(json_encode($response));
 		return response()->json($response, 200);
 	}

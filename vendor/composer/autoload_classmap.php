@@ -95,6 +95,7 @@ return array(
     'App\\Providers\\BroadcastServiceProvider' => $baseDir . '/app/Providers/BroadcastServiceProvider.php',
     'App\\Providers\\EventServiceProvider' => $baseDir . '/app/Providers/EventServiceProvider.php',
     'App\\Providers\\RouteServiceProvider' => $baseDir . '/app/Providers/RouteServiceProvider.php',
+    'App\\RefundTransaction' => $baseDir . '/app/RefundTransaction.php',
     'App\\Settings' => $baseDir . '/app/Settings.php',
     'App\\State' => $baseDir . '/app/State.php',
     'App\\Status' => $baseDir . '/app/Status.php',
