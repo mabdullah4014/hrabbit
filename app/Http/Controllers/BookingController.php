@@ -2238,6 +2238,7 @@ class BookingController extends Controller {
 		return TRUE;
 	}
 	protected function saveFirebase($input, $chk) {
+		info("saveFirebase");
 		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
@@ -2285,6 +2286,7 @@ class BookingController extends Controller {
 	}
 
 	protected function saveFirebaseCronCus($input, $cus_id) {
+		info("saveFirebaseCronCus");
 		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
@@ -2338,6 +2340,7 @@ class BookingController extends Controller {
 	}
 
 	protected function scheduleSaveFirebase($input) {
+		info("scheduleSaveFirebase");
 		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
@@ -2378,6 +2381,8 @@ class BookingController extends Controller {
 	}
 
 	protected function updateFirebase($data) {
+		info("updateFirebase");
+		info($data['service_status']);
 		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
@@ -2626,6 +2631,8 @@ class BookingController extends Controller {
 	}
 
 	protected function updateadminFirebase($input) {
+		info("updateadminFirebase");
+		info($input['service_status']);
 		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
