@@ -887,21 +887,21 @@ class BookingController extends Controller {
 					else {
 						info("1");
 						$response['code'] = 500;
-						$response['message'] = 'failure';
+						$response['message'] = 'Auhtorize Payment Failure';
 						return response()->json($response, 200);
 					}
 				}
 				else {
 					info("2");
 					$response['code'] = 500;
-					$response['message'] = 'failure';
+					$response['message'] = 'Auhtorize Payment Failure';
 					return response()->json($response, 200);
 				}
 			}
 			else {
 				info("3");
 				$response['code'] = 500;
-				$response['message'] = 'failure';
+				$response['message'] = 'Auhtorize Payment Failure';
 				return response()->json($response, 200);
 			}
 			$input['trip_num'] = str_random(4);
@@ -2900,7 +2900,7 @@ class BookingController extends Controller {
 			//print_r($drivers);
 			//print_r($drivers[$driver_id][l][0]);exit;
 			//echo $c_lat.'<br>'.$c_lon.'<br>';
-			if (@$drivers['status'] == 0) {
+			if ($drivers['status'] == 0) {
 				$driver_profile = Driver::where('id', $driver_id)->first();
 				if (is_object($driver_profile)) {
 					if ($driver_profile->status == 1) {
