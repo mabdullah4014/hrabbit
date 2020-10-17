@@ -2772,7 +2772,9 @@ class BookingController extends Controller {
 
 						if ($driver != "") {
 							if (@$driver['status'] == 1 && $driver['l'][0] != 0 && $driver['l'][1] != 0) {
-								$distance = $this->getDistance($c_lat, $c_lon, $driver['l'][0], $driver['l'][1]);
+								$distance = $this->getDistanceBetweenTwoLocations($c_lat, $c_lon, $driver['l'][0], $driver['l'][1], "Km");
+								info("driver distance");
+								info($distance);
 								if ($distance <= $radius) {
 									if (isset($data["favorite_driver_id"]) && $key == $data["favorite_driver_id"]) {
 										$result = array();
@@ -2823,7 +2825,6 @@ class BookingController extends Controller {
 			$pick_time = $to->diffInMinutes($from);
 			$trip_mileage = $trip->total_distance;
 			$fareSetting = \App\FareCalculationSetting::orderBy('id','desc')->first();	
-			$mileage_limit = 5;
 			$wait_to = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_wait_end_time);
 			$wait_from = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_wait_start_time);
 			$wait_time = $wait_to->diffInMinutes($wait_from);
@@ -2843,6 +2844,10 @@ class BookingController extends Controller {
 					$total_fare += $trip_mileage * $fareSetting->drive_mileage_al;
 					$total_fare += $drive_time * $fareSetting->drive_time_al;
 				}
+			}
+			if($total_fare < $fareSetting->min_fare)
+			{
+				return $fareSetting->min_fare;
 			}
 		}
 		return $total_fare;
