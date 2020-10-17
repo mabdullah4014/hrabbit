@@ -2487,11 +2487,11 @@ class BookingController extends Controller {
 		}
 
 		if ($data['service_status'] == 2) {
-			info("in service status 22");
+			info("in service status 2");
 			$field = 'start_time';
 			//$field='profile';
 			$update1 = array(
-				'Status' => 22,
+				'Status' => 2,
 				'DriverId' => $data['driver_id'],
 				'DriverName' => $data['driver_name'],
 				'DriverLastName' => $data['driver_lname'],
