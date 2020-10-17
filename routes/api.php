@@ -93,3 +93,5 @@ Route::get('booking/refund', 'BookingController@refund');
 Route::get('booking/refundJobInitiate', function(){
 	dispatch(new \App\Jobs\RefundTransaction());
 });
+
+Route::get('booking/distance', "BookingController@calculateDistance");

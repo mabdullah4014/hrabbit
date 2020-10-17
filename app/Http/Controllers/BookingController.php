@@ -2739,6 +2739,13 @@ class BookingController extends Controller {
 
 		$downstreamResponse = FCM::sendTo($token, $option, $notification, $data);
 	}
+	public function calculateDistance() {
+		$lat1= 31.48457;
+		$lon1= 74.2973917;
+		$lat2= 31.48498659548263;
+		$lon2= 74.29629385471344;
+		info($this->getDistanceBetweenTwoLocations($lat1,$lon1,$lat2,$lon2, "Km"));
+	}
 	protected function available_drivers($data) {
 		$c_lat = $data['latitude'];
 		$c_lon = $data['longitude'];
@@ -2771,6 +2778,7 @@ class BookingController extends Controller {
 						}
 
 						if ($driver != "") {
+							
 							if (@$driver['status'] == 1 && $driver['l'][0] != 0 && $driver['l'][1] != 0) {
 								$distance = $this->getDistanceBetweenTwoLocations($c_lat, $c_lon, $driver['l'][0], $driver['l'][1], "Km");
 								info("driver distance");
@@ -2853,6 +2861,10 @@ class BookingController extends Controller {
 		return $total_fare;
 	}
 	public function getDistanceBetweenTwoLocations($latitude1, $longitude1, $latitude2, $longitude2, $unit = 'Mi') {
+		info($latitude1);
+		info($longitude1);
+		info($latitude2);
+		info($longitude2);
 		$theta = $longitude1 - $longitude2; 
 		$distance = (sin(deg2rad($latitude1)) * sin(deg2rad($latitude2))) + (cos(deg2rad($latitude1)) * cos(deg2rad($latitude2)) * cos(deg2rad($theta))); 
 		$distance = acos($distance); 
