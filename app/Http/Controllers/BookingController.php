@@ -2448,6 +2448,7 @@ class BookingController extends Controller {
 				'Distance' => $data['distance'],
 				'DropLocation' => $data['drop_location'],
 				'CashStatus' => '0',
+				'RatingStatus' => '0'
 			);
 
 			$newpost = $database->getReference('customer_trips/' . $data['customer_id'])
