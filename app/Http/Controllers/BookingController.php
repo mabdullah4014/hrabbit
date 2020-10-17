@@ -1259,6 +1259,8 @@ class BookingController extends Controller {
 			// }
 			return response()->json($response, 200);
 		} elseif ($input['mode'] == 'accept') {
+			info("===========================");
+			info("accept");
 			$input = $request->all();
 			$ctime = Carbon::now();
 			$ctime->toTimeString();
