@@ -2480,6 +2480,7 @@ class BookingController extends Controller {
 		}
 
 		if ($data['service_status'] == 2) {
+			info("in service status 2");
 			$field = 'start_time';
 			//$field='profile';
 			$update1 = array(
