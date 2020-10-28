@@ -17,7 +17,8 @@ class DriverTrip extends Model
         'drop_location','vehicle_type','price_km','driver_id','driver_name',
         'driver_lname','drop_lat','drop_lon','pickup_lat','pickup_lon','customer_num',
         'phone_num','added_by','payment_status','payment_name','advance_transaction_id',
-        'drop_off_time', 'advance_amount','estimated_distance','transaction_id'
+        'drop_off_time', 'advance_amount','estimated_distance','transaction_id',
+        'driver_pickup_eta', 'driver_pickup_distance', 'pickup_drop_eta', 'pickup_drop_distance','points'
     ];
     
     public function customer()

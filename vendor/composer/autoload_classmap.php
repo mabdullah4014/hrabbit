@@ -86,6 +86,7 @@ return array(
     'App\\Http\\Middleware\\TrustProxies' => $baseDir . '/app/Http/Middleware/TrustProxies.php',
     'App\\Http\\Middleware\\VerifyCsrfToken' => $baseDir . '/app/Http/Middleware/VerifyCsrfToken.php',
     'App\\Invoice' => $baseDir . '/app/Invoice.php',
+    'App\\Jobs\\RefundTransaction' => $baseDir . '/app/Jobs/RefundTransaction.php',
     'App\\Language' => $baseDir . '/app/Language.php',
     'App\\MobileVerification' => $baseDir . '/app/MobileVerification.php',
     'App\\Observers\\DriverObserver' => $baseDir . '/app/Observers/DriverObserver.php',

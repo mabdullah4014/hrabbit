@@ -801,17 +801,17 @@ class BookingController extends Controller {
 
 	public function charge(Request $request) {
 		$response = \App\Http\Authorize::chargeCustomerProfile(1512111009, 1512246738, 1.5);
-		\Log::info(json_encode($response));
+		// \Log::info(json_encode($response));
 		return response()->json($response, 200);
 	}
 	public function getProfile(Request $request) {
 		$response = \App\Http\Authorize::getCustomerProfile(1511767855);
-		\Log::info(json_encode($response));
+		// \Log::info(json_encode($response));
 		return response()->json($response, 200);
 	}
 	public function refund(Request $request) {
 		$response = \App\Http\Authorize::refundTransaction("XXXX1111", "XXXX", 2, "40049523347");
-		\Log::info(json_encode($response));
+		// \Log::info(json_encode($response));
 		return response()->json($response, 200);
 	}
 	public function addTrip(Request $request) {
@@ -830,6 +830,10 @@ class BookingController extends Controller {
 				'drop_lon' => 'required',
 				'mode' => 'required',
 				'vehicle_id' => 'required',
+				'eta' => 'required',
+				'eta_pick_drop' => 'required',
+				'distance' => 'required',
+				'distance_pick_drop' => 'required',
 			]);
 
 			if ($validator->fails()) {
@@ -859,23 +863,38 @@ class BookingController extends Controller {
 				$customer = Customer::find($customer->id);
 			}
 			
-			$total_distance = $this->getDistanceBetweenTwoLocations($input['pickup_lat'], $input['pickup_lon'], $input['drop_lat'], $input['drop_lon'], "Km");
-			$input['estimated_distance'] = round($total_distance, 3);
-			info($input['estimated_distance']);
-			$vehicaleCategory = VehicleCategory::where('id', $input['vehicle_id'])->first();
-			$vehicle_type = $vehicaleCategory->vehicle_type;
-			$base = VehicleCategory::where('vehicle_type', $vehicle_type)->first();
-			$base_fare = $base->base_fare;
-			info($base_fare);
-			$price_per_km = $base->price_per_km;
-			info($price_per_km);
-			$total_cost = $input['estimated_distance'] * $price_per_km;
-			info($total_cost);
-			$input['advance_amount'] = $total_cost + $base_fare;
+			$driver_pickup_distance_in_miles = $input['distance'] * 0.000621371192;
+			$input['driver_pickup_distance'] = $input['estimated_distance'] = $driver_pickup_distance_in_miles;
+			$pickup_drop_distance_in_miles = $input['distance_pick_drop'] * 0.000621371192;
+			$input['pickup_drop_distance'] = $pickup_drop_distance_in_miles;
+			$driver_pickup_eta_in_minutes = $input['eta'] / 60;
+			$input['driver_pickup_eta'] = $driver_pickup_eta_in_minutes;
+			$pickup_drop_eta_in_minutes = $input['eta_pick_drop'] / 60;
+			$input['pickup_drop_eta'] = $pickup_drop_eta_in_minutes;
+			$fareSetting = \App\FareCalculationSetting::orderBy('id','desc')->first();
+			$total_fare = 0;
+			if($fareSetting){
+				$total_fare = $driver_pickup_distance_in_miles * $fareSetting->pick_mileage +
+				$driver_pickup_eta_in_minutes * $fareSetting->pick_time;
+				$mileage_limit = $fareSetting->mileage_limit;
+				if($pickup_drop_distance_in_miles <= $mileage_limit){
+					$total_fare += $pickup_drop_distance_in_miles * $fareSetting->drive_mileage;
+					$total_fare += $pickup_drop_eta_in_minutes * $fareSetting->drive_time;
+				}
+				else{
+					$total_fare += $pickup_drop_distance_in_miles * $fareSetting->drive_mileage_al;
+					$total_fare += $pickup_drop_eta_in_minutes * $fareSetting->drive_time_al;
+				}
+			}
+			if($total_fare < $fareSetting->min_fare)
+			{
+				$total_fare = $fareSetting->min_fare;
+			}
+			$input['advance_amount'] = round($total_fare, 2);
 			info($input['advance_amount']);
 
 			$paymentResponse = \App\Http\Authorize::chargeCustomerProfile($customer->customerProfileId, $customer->customerPaymentProfileId, $input['advance_amount']);
-			info($paymentResponse);
+			// info($paymentResponse);
 			if ($paymentResponse != null) {
 				if ($paymentResponse['resultCode'] == "Ok") {
 					$tresponse = $paymentResponse['transaction'];
@@ -885,21 +904,21 @@ class BookingController extends Controller {
 						$input['payment_name'] = "authorize";
 					}
 					else {
-						info("1");
+						// info("1");
 						$response['code'] = 500;
 						$response['message'] = 'Auhtorize Payment Failure';
 						return response()->json($response, 200);
 					}
 				}
 				else {
-					info("2");
+					// info("2");
 					$response['code'] = 500;
 					$response['message'] = 'Auhtorize Payment Failure';
 					return response()->json($response, 200);
 				}
 			}
 			else {
-				info("3");
+				// info("3");
 				$response['code'] = 500;
 				$response['message'] = 'Auhtorize Payment Failure';
 				return response()->json($response, 200);
@@ -1259,8 +1278,8 @@ class BookingController extends Controller {
 			// }
 			return response()->json($response, 200);
 		} elseif ($input['mode'] == 'accept') {
-			info("===========================");
-			info("accept");
+			// info("===========================");
+			// info("accept");
 			$input = $request->all();
 			$ctime = Carbon::now();
 			$ctime->toTimeString();
@@ -1605,8 +1624,8 @@ class BookingController extends Controller {
 			} elseif ($input['payment_type'] == 'authorize') {
 				if($job->advance_amount < $job->total_amount){
 					$amountToCut = $job->total_amount - $job->advance_amount;
-					info("amountToCut");
-					info($amountToCut);
+					// info("amountToCut");
+					// info($amountToCut);
 					$response = \App\Http\Authorize::chargeCustomerProfile($customer->customerProfileId, $customer->customerPaymentProfileId, (string)$amountToCut);
 					if ($response != null) {
 						if ($response['resultCode'] == "Ok") {
@@ -2240,7 +2259,7 @@ class BookingController extends Controller {
 		return TRUE;
 	}
 	protected function saveFirebase($input, $chk) {
-		info("saveFirebase");
+		// info("saveFirebase");
 		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
@@ -2288,7 +2307,7 @@ class BookingController extends Controller {
 	}
 
 	protected function saveFirebaseCronCus($input, $cus_id) {
-		info("saveFirebaseCronCus");
+		// info("saveFirebaseCronCus");
 		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
@@ -2342,7 +2361,7 @@ class BookingController extends Controller {
 	}
 
 	protected function scheduleSaveFirebase($input) {
-		info("scheduleSaveFirebase");
+		// info("scheduleSaveFirebase");
 		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
@@ -2383,8 +2402,8 @@ class BookingController extends Controller {
 	}
 
 	protected function updateFirebase($data) {
-		info("updateFirebase");
-		info($data['service_status']);
+		// info("updateFirebase");
+		// info($data['service_status']);
 		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
@@ -2488,7 +2507,7 @@ class BookingController extends Controller {
 		}
 
 		if ($data['service_status'] == 2) {
-			info("in service status 2");
+			// info("in service status 2");
 			$field = 'start_time';
 			//$field='profile';
 			$update1 = array(
@@ -2634,8 +2653,8 @@ class BookingController extends Controller {
 	}
 
 	protected function updateadminFirebase($input) {
-		info("updateadminFirebase");
-		info($input['service_status']);
+		// info("updateadminFirebase");
+		// info($input['service_status']);
 		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
@@ -2755,7 +2774,7 @@ class BookingController extends Controller {
 		$lon1= 74.2973917;
 		$lat2= 31.48498659548263;
 		$lon2= 74.29629385471344;
-		info($this->getDistanceBetweenTwoLocations($lat1,$lon1,$lat2,$lon2, "Km"));
+		// info($this->getDistanceBetweenTwoLocations($lat1,$lon1,$lat2,$lon2, "Km"));
 	}
 	protected function available_drivers($data) {
 		$c_lat = $data['latitude'];
@@ -2792,9 +2811,9 @@ class BookingController extends Controller {
 							
 							if ($driver['status'] == 1 && $driver['l'][0] != 0 && $driver['l'][1] != 0) {
 								$distance = $this->getDistanceBetweenTwoLocations($c_lat, $c_lon, $driver['l'][0], $driver['l'][1], "Km");
-								info("driver distance");
-								info($key);
-								info($distance);
+								// info("driver distance");
+								// info($key);
+								// info($distance);
 								if ($distance <= $radius) {
 									if (isset($data["favorite_driver_id"]) && $key == $data["favorite_driver_id"]) {
 										$result = array();
@@ -2811,8 +2830,8 @@ class BookingController extends Controller {
 			}
 		}
 
-		info("result ========================");
-		info(json_encode($result));
+		// info("result ========================");
+		// info(json_encode($result));
 		return $result;
 	}
 
@@ -2875,10 +2894,10 @@ class BookingController extends Controller {
 		return $total_fare;
 	}
 	public function getDistanceBetweenTwoLocations($latitude1, $longitude1, $latitude2, $longitude2, $unit = 'Mi') {
-		info($latitude1);
-		info($longitude1);
-		info($latitude2);
-		info($longitude2);
+		// info($latitude1);
+		// info($longitude1);
+		// info($latitude2);
+		// info($longitude2);
 		$theta = $longitude1 - $longitude2; 
 		$distance = (sin(deg2rad($latitude1)) * sin(deg2rad($latitude2))) + (cos(deg2rad($latitude1)) * cos(deg2rad($latitude2)) * cos(deg2rad($theta))); 
 		$distance = acos($distance); 
