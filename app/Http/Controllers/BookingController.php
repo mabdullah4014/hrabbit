@@ -858,6 +858,7 @@ class BookingController extends Controller {
 		$input = $request->all();
 		$ctime = Carbon::now();
 		$ctime->toTimeString();
+		$customer = null;
 		if ($input['mode'] == 'ridenow') {
 			$validator = Validator::make($input, [
 				'customer_id' => 'required',
@@ -931,36 +932,46 @@ class BookingController extends Controller {
 			}
 			$input['advance_amount'] = round($total_fare, 2);
 			info($input['advance_amount']);
-
-			$paymentResponse = \App\Http\Authorize::chargeCustomerProfile($customer->customerProfileId, $customer->customerPaymentProfileId, $input['advance_amount']);
-			// info($paymentResponse);
-			if ($paymentResponse != null) {
-				if ($paymentResponse['resultCode'] == "Ok") {
-					$tresponse = $paymentResponse['transaction'];
-					if ($tresponse != null) {
-						$input['advance_transaction_id'] = $tresponse['transId'];
-						$input['payment_status'] = "1";
-						$input['payment_name'] = "authorize";
+			$customer_points = $customer->points/100;
+			if($customer_points >= $input['advance_amount']){
+				$customer->points = $customer->points - ($input['advance_amount'] * 100);
+				$customer->save();
+				$input['payment_status'] = "1";
+				$input['payment_name'] = "points";
+			}
+			else{
+				$paymentResponse = \App\Http\Authorize::chargeCustomerProfile($customer->customerProfileId, $customer->customerPaymentProfileId, $input['advance_amount'] - $customer->points/100);
+				$customer->points = 0;
+				$customer->save();
+				// info($paymentResponse);
+				if ($paymentResponse != null) {
+					if ($paymentResponse['resultCode'] == "Ok") {
+						$tresponse = $paymentResponse['transaction'];
+						if ($tresponse != null) {
+							$input['advance_transaction_id'] = $tresponse['transId'];
+							$input['payment_status'] = "1";
+							$input['payment_name'] = "authorize";
+						}
+						else {
+							// info("1");
+							$response['code'] = 500;
+							$response['message'] = 'Auhtorize Payment Failure';
+							return response()->json($response, 200);
+						}
 					}
 					else {
-						// info("1");
+						// info("2");
 						$response['code'] = 500;
 						$response['message'] = 'Auhtorize Payment Failure';
 						return response()->json($response, 200);
 					}
 				}
 				else {
-					// info("2");
+					// info("3");
 					$response['code'] = 500;
 					$response['message'] = 'Auhtorize Payment Failure';
 					return response()->json($response, 200);
 				}
-			}
-			else {
-				// info("3");
-				$response['code'] = 500;
-				$response['message'] = 'Auhtorize Payment Failure';
-				return response()->json($response, 200);
 			}
 			$input['trip_num'] = str_random(4);
 			$input['cus_id'] = $input['customer_id'];
@@ -1686,6 +1697,12 @@ class BookingController extends Controller {
 			$total_amount = $job->total_amount;
 			$total_commission = $job->commission;
 			$total = $total_amount - $total_commission;
+			$job->points = 10;
+			$customer = \App\Customer::where('id', $job->cus_id)->first();
+			if($customer){
+				$customer->points = $customer->points + 10;
+				$customer->save();
+			}
 			$driver = Driver::where('id', $input['driver_id'])->first();
 			$driver->wallet = $driver->wallet + $total;
 			$driver->save();
