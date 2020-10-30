@@ -814,6 +814,45 @@ class BookingController extends Controller {
 		// \Log::info(json_encode($response));
 		return response()->json($response, 200);
 	}
+	public function getEstimatedFare(Request $request) {
+		$input = $request->all();
+		$validator = Validator::make($input, [
+				'eta' => 'required',
+				'eta_pick_drop' => 'required',
+				'distance' => 'required',
+				'distance_pick_drop' => 'required',
+			]);
+
+			if ($validator->fails()) {
+				return $this->sendError('Validation Error.' . $validator->errors());
+			}
+			$driver_pickup_distance_in_miles = $input['distance'] * 0.000621371192;
+			$pickup_drop_distance_in_miles = $input['distance_pick_drop'] * 0.000621371192;
+			$driver_pickup_eta_in_minutes = $input['eta'] / 60;
+			$pickup_drop_eta_in_minutes = $input['eta_pick_drop'] / 60;
+			$fareSetting = \App\FareCalculationSetting::orderBy('id','desc')->first();
+			$total_fare = 0;
+			if($fareSetting){
+				$total_fare = $driver_pickup_distance_in_miles * $fareSetting->pick_mileage +
+				$driver_pickup_eta_in_minutes * $fareSetting->pick_time;
+				$mileage_limit = $fareSetting->mileage_limit;
+				if($pickup_drop_distance_in_miles <= $mileage_limit){
+					$total_fare += $pickup_drop_distance_in_miles * $fareSetting->drive_mileage;
+					$total_fare += $pickup_drop_eta_in_minutes * $fareSetting->drive_time;
+				}
+				else{
+					$total_fare += $pickup_drop_distance_in_miles * $fareSetting->drive_mileage_al;
+					$total_fare += $pickup_drop_eta_in_minutes * $fareSetting->drive_time_al;
+				}
+			}
+			if($total_fare < $fareSetting->min_fare)
+			{
+				$total_fare = $fareSetting->min_fare;
+			}
+			$response['result'] = round($total_fare, 2);
+			$response['message'] = "success";
+			return response()->json($response, 200);
+	}
 	public function addTrip(Request $request) {
 
 		$input = $request->all();

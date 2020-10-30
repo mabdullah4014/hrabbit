@@ -68,6 +68,7 @@ Route::post('booking/history/mailInvoice', 'BookingController@mailInvoice');
 Route::get('pdfview', array('as' => 'pdfview', 'uses' => 'BookingController@mailInvoice'));
 
 Route::post('booking/add', 'BookingController@addTrip');
+Route::post('booking/getEstimatedFare', 'BookingController@getEstimatedFare');
 
 Route::post('booking/admin_assign', 'BookingController@admin_assign');
 
