@@ -1076,14 +1076,15 @@ class BookingController extends Controller {
 					$this->saveBookingInFirebase($input);
 					// }
 
-					$response['code'] = 200;
 					$response['message'] = "Driver is not available";
+					$response['code'] = 200;
 				}
-
+				
 			} else {
 				$response['code'] = 500;
 				$response['message'] = 'failure';
 			}
+			$response['code'] = 200;
 			return response()->json($response, 200);
 		}if ($input['mode'] == 'ridelater') {
 			$validator = Validator::make($input, [
@@ -2362,7 +2363,7 @@ class BookingController extends Controller {
 				'customer_trips/' . $input['customer_id'] => $resultqa,
 			];
 			$database->getReference()->update($update2);
-			
+
 			$database->getReference()->update($update1);
 		}
 		return true;
