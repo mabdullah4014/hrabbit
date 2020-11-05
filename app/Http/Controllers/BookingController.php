@@ -2361,10 +2361,9 @@ class BookingController extends Controller {
 			$update2 = [
 				'customer_trips/' . $input['customer_id'] => $resultqa,
 			];
-			$newpost = $database->getReference() // this is the root reference
-				->update($update1);
-			$newpost = $database->getReference() // this is the root reference
-				->update($update2);
+			$database->getReference()->update($update2);
+			
+			$database->getReference()->update($update1);
 		}
 		return true;
 	}
