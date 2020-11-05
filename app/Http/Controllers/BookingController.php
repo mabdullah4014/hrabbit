@@ -1036,7 +1036,9 @@ class BookingController extends Controller {
 				}
 				// $driverList = $this->driverList($data);
 				$driverList = $this->available_drivers($data);
+				info(json_encode($driverList));
 				if (count($driverList) > 0) {
+					info("Yes! Driver(s) available");
 					$input['customer_avatar'] = ($customer->avatar != "" ? $customer->avatar : "");
 					/*$email = $customer->email;
 						$name = $customer->name;
@@ -1070,6 +1072,7 @@ class BookingController extends Controller {
 
 				} else {
 					// if($input['booking_id'] == 0){
+						info("driver not available");
 					$this->saveBookingInFirebase($input);
 					// }
 
@@ -2315,7 +2318,11 @@ class BookingController extends Controller {
 		return TRUE;
 	}
 	protected function saveFirebase($input, $chk) {
-		// info("saveFirebase");
+		info("SaveFirebase Called");
+		info("===================");
+		info("Input");
+		info(json_encode($input));
+		info("===================");
 		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
@@ -2342,7 +2349,7 @@ class BookingController extends Controller {
 			$resultqa['CreatedTime'] = date('d/m/y H:i:s');
 			$resultqa['RequestFrom'] = $input['RequestFrom'];
 			$resultqa['RequestFromOtp'] = isset($input['send_OTP']) ? $input['send_OTP'] : '1';
-			$resultpa['Status'] = 1;
+			// $resultpa['Status'] = 1;
 			if ($driver['device_id'] != '0' && $driver['device_id'] != '') {
 				$resultss = $this->sendFCMDriver($driver['device_id'], "Customer request for service");
 			}
@@ -2458,7 +2465,10 @@ class BookingController extends Controller {
 	}
 
 	protected function updateFirebase($data) {
-		// info("updateFirebase");
+		info("Update Firebase Called");
+		info("======================");
+		info(json_encode($data));
+		info("======================");
 		// info($data['service_status']);
 		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
@@ -2732,7 +2742,7 @@ class BookingController extends Controller {
 			$resultqa['DropLatitude'] = $input['drop_lat'];
 			$resultqa['DropLongitude'] = $input['drop_lon'];
 			$resultqa['CreatedTime'] = date('d/m/y H:i:s');
-			$resultpa['Status'] = 2;
+			// $resultpa['Status'] = 2;
 			$resultqa['driver_id'] = $input['driver_id'];
 			$resultqa['added_by'] = 'admin';
 			$resultqa['RequestFrom'] = 'Admin';
