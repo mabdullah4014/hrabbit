@@ -2355,16 +2355,16 @@ class BookingController extends Controller {
 			}
 
 			$update1 = [
-				'customer_trips/' . $input['customer_id'] => $resultqa,
-				'drivers_trips/' . $driver['id'] => $resultqa
+				'drivers_trips/' . $driver['id'] => $resultqa,
 			];
 
-			// $update2 = [
-			// ];
+			$update2 = [
+				'customer_trips/' . $input['customer_id'] => $resultqa,
+			];
 			$newpost = $database->getReference() // this is the root reference
 				->update($update1);
-			// $newpost = $database->getReference() // this is the root reference
-			// 	->update($update2);
+			$newpost = $database->getReference() // this is the root reference
+				->update($update2);
 		}
 		return true;
 	}
