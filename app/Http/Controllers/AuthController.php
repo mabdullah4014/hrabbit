@@ -418,7 +418,7 @@ class AuthController extends Controller {
 
 		$check = $this->checkCustomer($request);
 		if (!$check['exist']) {
-			// $input['password'] = password_hash($request->password, PASSWORD_DEFAULT, $options);
+			$input['password'] = password_hash($request->password, PASSWORD_DEFAULT, $options);
 			$input['status'] = 1;
 			//$input['country']=$request->input('country_code');
 			$user = customer::create($input);
