@@ -8,14 +8,18 @@ class Authorize {
 
 	public static function chargeCustomerProfile($profileid, $paymentprofileid, $amount, $details = null) {
 		$merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
-		\Log::info(env('MERCHANT_LOGIN_ID'));
-		\Log::info(env('MERCHANT_TRANSACTION_KEY'));
-
+		
 		$isProd = env('IS_AUTHORIZE_PROD');
 		if ($isProd) {
+			info("Production Creds Used");
+			\Log::info(env('MERCHANT_LOGIN_ID_PROD'));
+			\Log::info(env('MERCHANT_TRANSACTION_KEY_PROD'));
 			$merchantAuthentication->setName(env('MERCHANT_LOGIN_ID_PROD'));
 			$merchantAuthentication->setTransactionKey(env('MERCHANT_TRANSACTION_KEY_PROD'));
 		} else {
+			info("Sandbox Creds Used");
+			\Log::info(env('MERCHANT_LOGIN_ID'));
+			\Log::info(env('MERCHANT_TRANSACTION_KEY'));
 			$merchantAuthentication->setName(env('MERCHANT_LOGIN_ID'));
 			$merchantAuthentication->setTransactionKey(env('MERCHANT_TRANSACTION_KEY'));
 		}
@@ -101,14 +105,16 @@ class Authorize {
 
 	public static function getCustomerProfile($profileId) {
 		$merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
-		\Log::info(env('MERCHANT_LOGIN_ID'));
-		\Log::info(env('MERCHANT_TRANSACTION_KEY'));
-
-		$isProd = env('IS_AUTHORIZE_PROD');
 		if ($isProd) {
+			info("Production Creds Used");
+			\Log::info(env('MERCHANT_LOGIN_ID_PROD'));
+			\Log::info(env('MERCHANT_TRANSACTION_KEY_PROD'));
 			$merchantAuthentication->setName(env('MERCHANT_LOGIN_ID_PROD'));
 			$merchantAuthentication->setTransactionKey(env('MERCHANT_TRANSACTION_KEY_PROD'));
 		} else {
+			info("Sandbox Creds Used");
+			\Log::info(env('MERCHANT_LOGIN_ID'));
+			\Log::info(env('MERCHANT_TRANSACTION_KEY'));
 			$merchantAuthentication->setName(env('MERCHANT_LOGIN_ID'));
 			$merchantAuthentication->setTransactionKey(env('MERCHANT_TRANSACTION_KEY'));
 		}
@@ -159,14 +165,17 @@ class Authorize {
 	
 	public static function refundTransaction($cardNumber, $expiryDate, $amount, $refTransactionId) {
 		$merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
-		\Log::info(env('MERCHANT_LOGIN_ID'));
-		\Log::info(env('MERCHANT_TRANSACTION_KEY'));
-		
 		$isProd = env('IS_AUTHORIZE_PROD');
 		if ($isProd) {
+			info("Production Creds Used");
+			\Log::info(env('MERCHANT_LOGIN_ID_PROD'));
+			\Log::info(env('MERCHANT_TRANSACTION_KEY_PROD'));
 			$merchantAuthentication->setName(env('MERCHANT_LOGIN_ID_PROD'));
 			$merchantAuthentication->setTransactionKey(env('MERCHANT_TRANSACTION_KEY_PROD'));
 		} else {
+			info("Sandbox Creds Used");
+			\Log::info(env('MERCHANT_LOGIN_ID'));
+			\Log::info(env('MERCHANT_TRANSACTION_KEY'));
 			$merchantAuthentication->setName(env('MERCHANT_LOGIN_ID'));
 			$merchantAuthentication->setTransactionKey(env('MERCHANT_TRANSACTION_KEY'));
 		}
