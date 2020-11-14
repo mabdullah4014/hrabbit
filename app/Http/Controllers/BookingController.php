@@ -962,7 +962,7 @@ class BookingController extends Controller {
 					else {
 						// info("2");
 						$response['code'] = 500;
-						$response['message'] = 'Auhtorize Payment Failure';
+						$response['message'] = $paymentResponse["message"]["text"];
 						return response()->json($response, 200);
 					}
 				}
