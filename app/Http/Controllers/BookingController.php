@@ -870,10 +870,10 @@ class BookingController extends Controller {
 				'drop_lon' => 'required',
 				'mode' => 'required',
 				'vehicle_id' => 'required',
-				'eta' => 'required',
-				'eta_pick_drop' => 'required',
-				'distance' => 'required',
-				'distance_pick_drop' => 'required',
+				'eta' => 'required', // time driver will take to drive to pick up location
+				'eta_pick_drop' => 'required', // time driver will take to drive to from pick up to drop location
+				'distance' => 'required', // distance driver needs to drive to pick up location
+				'distance_pick_drop' => 'required', // distance driver needs to drive from pick up to drop
 			]);
 
 			if ($validator->fails()) {
@@ -1592,6 +1592,7 @@ class BookingController extends Controller {
 			$job->drop_location = isset($input['drop_location']) ? $input['drop_location'] : $job->drop_location;
 			$job->status = 4;
 			$total_distance = isset($input['total_distance']) ? $input['total_distance'] : 0;
+			$total_distance = $total_distance * 0.000621371192;
 			$job->total_distance = round($total_distance, 3);
 			
 			$vehicle_type = $job->vehicle_type;
@@ -2925,18 +2926,31 @@ class BookingController extends Controller {
 	public function getTripFare($tripId) {
 		$trip = DriverTrip::where('id', $tripId)->first();
 		$total_fare = 0;
+		// info($tripId);
 		if($trip){
 			$pick_mileage = $this->getDistanceBetweenTwoLocations($trip->driver_pick_start_lat, $trip->driver_pick_start_lon, $trip->pickup_lat, $trip->pickup_lon);
-			$to = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_pick_end_time);
-			$from = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_pick_start_time);
+			// info("Pick Mileage");
+			// info($pick_mileage);
+			$to = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $trip->driver_pick_end_time);
+			// info($to);
+			$from = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $trip->driver_pick_start_time);
+			// info($from);
 			$pick_time = $to->diffInMinutes($from);
+			// info("Pick Time");
+			// info($pick_time);
 			$trip_mileage = $trip->total_distance;
+			// info("Trip Mileage");
+			// info($trip_mileage);
 			$fareSetting = \App\FareCalculationSetting::orderBy('id','desc')->first();	
-			$wait_to = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_wait_end_time);
-			$wait_from = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->driver_wait_start_time);
+			$wait_to = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $trip->driver_wait_end_time);
+			$wait_from = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $trip->driver_wait_start_time);
 			$wait_time = $wait_to->diffInMinutes($wait_from);
-			$drop_off = \Carbon\Carbon::createFromFormat('Y-m-d H:s:i', $trip->drop_off_time);
+			// info("Wait Time");
+			// info($wait_time);
+			$drop_off = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $trip->drop_off_time);
 			$drive_time = $wait_to->diffInMinutes($drop_off);
+			// info("Drive Time");
+			// info($drive_time);
 			if($fareSetting){
 				$total_fare = $pick_mileage * $fareSetting->pick_mileage +
 				$pick_time * $fareSetting->pick_time;

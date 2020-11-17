@@ -105,6 +105,7 @@ class Authorize {
 
 	public static function getCustomerProfile($profileId) {
 		$merchantAuthentication = new AnetAPI\MerchantAuthenticationType();
+		$isProd = env('IS_AUTHORIZE_PROD');
 		if ($isProd) {
 			info("Production Creds Used");
 			\Log::info(env('MERCHANT_LOGIN_ID_PROD'));

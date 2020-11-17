@@ -64,6 +64,7 @@ Route::post('booking/history/ongoing', 'BookingController@viewOngoing');
 Route::post('booking/history/past', 'BookingController@viewPast');
 Route::post('booking/history/upcoming', 'BookingController@viewUpcoming');
 Route::post('booking/history/mailInvoice', 'BookingController@mailInvoice');
+Route::get('booking/checkTrip/{tripId}', 'BookingController@getTripFare');
 
 Route::get('pdfview', array('as' => 'pdfview', 'uses' => 'BookingController@mailInvoice'));
 
