@@ -1592,7 +1592,7 @@ class BookingController extends Controller {
 			$job->drop_location = isset($input['drop_location']) ? $input['drop_location'] : $job->drop_location;
 			$job->status = 4;
 			$total_distance = isset($input['total_distance']) ? $input['total_distance'] : 0;
-			$total_distance = $total_distance * 0.000621371192;
+			$total_distance = $total_distance * 0.621371;
 			$job->total_distance = round($total_distance, 3);
 			
 			$vehicle_type = $job->vehicle_type;
@@ -2926,31 +2926,31 @@ class BookingController extends Controller {
 	public function getTripFare($tripId) {
 		$trip = DriverTrip::where('id', $tripId)->first();
 		$total_fare = 0;
-		// info($tripId);
+		info($tripId);
 		if($trip){
 			$pick_mileage = $this->getDistanceBetweenTwoLocations($trip->driver_pick_start_lat, $trip->driver_pick_start_lon, $trip->pickup_lat, $trip->pickup_lon);
-			// info("Pick Mileage");
-			// info($pick_mileage);
+			info("Pick Mileage");
+			info($pick_mileage);
 			$to = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $trip->driver_pick_end_time);
-			// info($to);
+			info($to);
 			$from = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $trip->driver_pick_start_time);
-			// info($from);
+			info($from);
 			$pick_time = $to->diffInMinutes($from);
-			// info("Pick Time");
-			// info($pick_time);
+			info("Pick Time");
+			info($pick_time);
 			$trip_mileage = $trip->total_distance;
-			// info("Trip Mileage");
-			// info($trip_mileage);
+			info("Trip Mileage");
+			info($trip_mileage);
 			$fareSetting = \App\FareCalculationSetting::orderBy('id','desc')->first();	
 			$wait_to = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $trip->driver_wait_end_time);
 			$wait_from = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $trip->driver_wait_start_time);
 			$wait_time = $wait_to->diffInMinutes($wait_from);
-			// info("Wait Time");
-			// info($wait_time);
+			info("Wait Time");
+			info($wait_time);
 			$drop_off = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $trip->drop_off_time);
 			$drive_time = $wait_to->diffInMinutes($drop_off);
-			// info("Drive Time");
-			// info($drive_time);
+			info("Drive Time");
+			info($drive_time);
 			if($fareSetting){
 				$total_fare = $pick_mileage * $fareSetting->pick_mileage +
 				$pick_time * $fareSetting->pick_time;
@@ -2971,6 +2971,7 @@ class BookingController extends Controller {
 				return $fareSetting->min_fare;
 			}
 		}
+		info("==========================================");
 		return $total_fare;
 	}
 	public function getDistanceBetweenTwoLocations($latitude1, $longitude1, $latitude2, $longitude2, $unit = 'Mi') {
