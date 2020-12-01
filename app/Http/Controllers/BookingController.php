@@ -2841,8 +2841,7 @@ class BookingController extends Controller {
 		$lon1= 74.2973917;
 		$lat2= 31.48498659548263;
 		$lon2= 74.29629385471344;
-		// info($this->getDistanceBetweenTwoLocations($lat1,$lon1,$lat2,$lon2, "Km"));
-	}
+		// info($this->getDistanceBetweenTwoLocations($lat1,$lon1,$lat2,$lon2,	}
 	protected function available_drivers($data) {
 		$c_lat = $data['latitude'];
 		$c_lon = $data['longitude'];
@@ -2877,7 +2876,7 @@ class BookingController extends Controller {
 						if ($driver != "") {
 							
 							if ($driver['status'] == 1 && $driver['l'][0] != 0 && $driver['l'][1] != 0) {
-								$distance = $this->getDistanceBetweenTwoLocations($c_lat, $c_lon, $driver['l'][0], $driver['l'][1], "Km");
+								$distance = $this->getDistanceBetweenTwoLocations($c_lat, $c_lon, $driver['l'][0], $driver['l'][1]);
 								// info("driver distance");
 								// info($key);
 								// info($distance);
