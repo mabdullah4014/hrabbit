@@ -75,6 +75,9 @@ class Authorize {
 						$data["message"] = [];
 						$data["message"]["text"] = $tresponse->getErrors()[0]->getText();
 						$data["message"]["code"] = $tresponse->getErrors()[0]->getCode();
+						if($data["message"]["code"] == "11" || $data["message"]["code"] == 11){
+							$data["message"]["text"] = "Duplicate transaction - please wait 2 minutes before submitting next ride request";
+						}
 					}
 				}
 			} else {
@@ -87,6 +90,9 @@ class Authorize {
 					$data["message"] = [];
 					$data["message"]["text"] = $tresponse->getErrors()[0]->getErrorText();
 					$data["message"]["code"] = $tresponse->getErrors()[0]->getErrorCode();
+					if($data["message"]["code"] == "11" || $data["message"]["code"] == 11){
+						$data["message"]["text"] = "Duplicate transaction - please wait 2 minutes before submitting next ride request";
+					}
 				} else {
 					\Log::info(" Error code  : " . $response->getMessages()->getMessage()[0]->getCode() . "\n");
 					\Log::info(" Error message : " . $response->getMessages()->getMessage()[0]->getText() . "\n");
@@ -94,6 +100,9 @@ class Authorize {
 					$data["message"] = [];
 					$data["message"]["text"] = $response->getMessages()->getMessage()[0]->getText();
 					$data["message"]["code"] = $response->getMessages()->getMessage()[0]->getCode();
+					if($data["message"]["code"] == "11" || $data["message"]["code"] == 11){
+						$data["message"]["text"] = "Duplicate transaction - please wait 2 minutes before submitting next ride request";
+					}
 				}
 			}
 		} else {
