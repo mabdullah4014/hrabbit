@@ -19,7 +19,17 @@ class RefundTransaction implements ShouldQueue
      */
     public function __construct()
     {
-        $transactions = \App\RefundTransaction::where('settled', false)->get();
+        
+    }
+
+    /**
+     * Execute the job.
+     *
+     * @return void
+     */
+    public function handle()
+    {
+        $transactions = \App\RefundTransaction::where('settled', false)->where('retries', '<=', 50)->get();
         foreach ($transactions as $key => $transaction) {
             $trip = \App\DriverTrip::find($transaction->trip_id);
             if($trip){
@@ -58,15 +68,5 @@ class RefundTransaction implements ShouldQueue
             $transaction->retries += 1;
             $transaction->save();
         }
-    }
-
-    /**
-     * Execute the job.
-     *
-     * @return void
-     */
-    public function handle()
-    {
-        //
     }
 }
