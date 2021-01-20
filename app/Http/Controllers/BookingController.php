@@ -2837,11 +2837,11 @@ class BookingController extends Controller {
 		$downstreamResponse = FCM::sendTo($token, $option, $notification, $data);
 	}
 	public function calculateDistance() {
-		$lat1= 31.48457;
-		$lon1= 74.2973917;
-		$lat2= 31.48498659548263;
-		$lon2= 74.29629385471344;
-		// info($this->getDistanceBetweenTwoLocations($lat1,$lon1,$lat2,$lon2,	
+		$lat1= 31.4668468;
+		$lon1= 74.28383846;
+		$lat2= 31.418606;
+		$lon2= 74.590345;
+		info($this->getDistanceBetweenTwoLocations($lat1,$lon1,$lat2,$lon2));
 	}
 	protected function available_drivers($data) {
 		$c_lat = $data['latitude'];
@@ -2878,10 +2878,23 @@ class BookingController extends Controller {
 							
 							if ($driver['status'] == 1 && $driver['l'][0] != 0 && $driver['l'][1] != 0) {
 								$distance = $this->getDistanceBetweenTwoLocations($c_lat, $c_lon, $driver['l'][0], $driver['l'][1]);
-								// info("driver distance");
-								// info($key);
-								// info($distance);
+								info("********************************************");
+								info("driver id");
+								info($key);
+								info("driver lat");
+								info($driver['l'][0]);
+								info("driver long");
+								info($driver['l'][1]);
+								info("current lat");
+								info($c_lat);
+								info("current long");
+								info($c_lon);
+								info("driver distance");
+								info($distance);
+								info("radius");
+								info($radius);
 								if ($distance <= $radius) {
+									info("less than");
 									if (isset($data["favorite_driver_id"]) && $key == $data["favorite_driver_id"]) {
 										$result = array();
 										$result[] = $driver_profile->toArray();
@@ -2890,6 +2903,7 @@ class BookingController extends Controller {
 										$result[] = $driver_profile->toArray();
 									}
 								}
+								info("********************************************");
 							}
 						}
 					}
