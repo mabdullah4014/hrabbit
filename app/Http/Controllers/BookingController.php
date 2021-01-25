@@ -2999,6 +2999,7 @@ class BookingController extends Controller {
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		$response = curl_exec($ch);
+		info($response);
 		curl_close($ch);
 		$response_a = json_decode($response, true);
 		$dist = $response_a['rows'][0]['elements'][0]['distance']['text'];
@@ -3008,10 +3009,10 @@ class BookingController extends Controller {
 	}
 
 	public function getDistanceBetweenTwoLocations($latitude1, $longitude1, $latitude2, $longitude2, $unit = 'Mi') {
-		// info($latitude1);
-		// info($longitude1);
-		// info($latitude2);
-		// info($longitude2);
+		info($latitude1);
+		info($longitude1);
+		info($latitude2);
+		info($longitude2);
 		// $theta = $longitude1 - $longitude2; 
 		// $distance = (sin(deg2rad($latitude1)) * sin(deg2rad($latitude2))) + (cos(deg2rad($latitude1)) * cos(deg2rad($latitude2)) * cos(deg2rad($theta))); 
 		// $distance = acos($distance); 
@@ -3021,7 +3022,7 @@ class BookingController extends Controller {
 		if($distance && $distance['distance']){
 			$distance = explode(" ", $distance['distance'])[0];
 		}
-		// info($distance);
+		info($distance);
 		switch($unit) { 
 			case 'Mi': 
 				$distance = $distance / 1.609344; 
