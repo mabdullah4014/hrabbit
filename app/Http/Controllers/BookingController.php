@@ -2837,10 +2837,10 @@ class BookingController extends Controller {
 		$downstreamResponse = FCM::sendTo($token, $option, $notification, $data);
 	}
 	public function calculateDistance() {
-		$lat1= 31.4668468;
-		$lon1= 74.28383846;
-		$lat2= 31.418606;
-		$lon2= 74.590345;
+		$lat1= 39.034158093714986;
+		$lon1= -84.53362140228879;
+		$lat2= 39.048643651010835;
+		$lon2= -84.62587280043604;
 		info($this->getDistanceBetweenTwoLocations($lat1,$lon1,$lat2,$lon2));
 	}
 	protected function available_drivers($data) {
@@ -2988,21 +2988,46 @@ class BookingController extends Controller {
 		info("==========================================");
 		return $total_fare;
 	}
+
+	public function GetDrivingDistance($lat1, $lat2, $long1, $long2)
+	{
+		$url = "https://maps.googleapis.com/maps/api/distancematrix/json?key=AIzaSyCy4z_zZuEpnXJU2mC7S-AFtbiWH8M5ZT0&origins=".$lat1.",".$long1."&destinations=".$lat2.",".$long2."&mode=driving";
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_PROXYPORT, 3128);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+		$response = curl_exec($ch);
+		curl_close($ch);
+		$response_a = json_decode($response, true);
+		$dist = $response_a['rows'][0]['elements'][0]['distance']['text'];
+		$time = $response_a['rows'][0]['elements'][0]['duration']['text'];
+
+		return array('distance' => $dist, 'time' => $time);
+	}
+
 	public function getDistanceBetweenTwoLocations($latitude1, $longitude1, $latitude2, $longitude2, $unit = 'Mi') {
 		// info($latitude1);
 		// info($longitude1);
 		// info($latitude2);
 		// info($longitude2);
-		$theta = $longitude1 - $longitude2; 
-		$distance = (sin(deg2rad($latitude1)) * sin(deg2rad($latitude2))) + (cos(deg2rad($latitude1)) * cos(deg2rad($latitude2)) * cos(deg2rad($theta))); 
-		$distance = acos($distance); 
-		$distance = rad2deg($distance); 
-		$distance = $distance * 60 * 1.1515; 
+		// $theta = $longitude1 - $longitude2; 
+		// $distance = (sin(deg2rad($latitude1)) * sin(deg2rad($latitude2))) + (cos(deg2rad($latitude1)) * cos(deg2rad($latitude2)) * cos(deg2rad($theta))); 
+		// $distance = acos($distance); 
+		// $distance = rad2deg($distance); 
+		// $distance = $distance * 60 * 1.1515; 
+		$distance = $this->GetDrivingDistance($latitude1, $latitude2, $longitude1, $longitude2);
+		if($distance && $distance['distance']){
+			$distance = explode(" ", $distance['distance'])[0];
+		}
+		// info($distance);
 		switch($unit) { 
 			case 'Mi': 
-			break; 
+				$distance = $distance / 1.609344; 
+				break; 
 			case 'Km' : 
-			$distance = $distance * 1.609344; 
+				break; 
 		} 
 		return (round($distance,2)); 
 	}

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0022)https://houstonrabbit.com/ -->
+<!-- saved from url=(0022)https://vcabb.com/ -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <style>@keyframes beginBrowserAutofill{0%{}to{}}@keyframes endBrowserAutofill{0%{}to{}}.pac-container{background-color:#fff;position:absolute!important;z-index:1000;border-radius:2px;border-top:1px solid #d9d9d9;font-family:Arial,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,0.3);-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box;overflow:hidden}.pac-logo:after{content:"";padding:1px 1px 1px 0;height:18px;box-sizing:border-box;text-align:right;display:block;background-image:url(https://maps.gstatic.com/mapfiles/api-3/images/powered-by-google-on-white3.png);background-position:right;background-repeat:no-repeat;background-size:120px 14px}.hdpi.pac-logo:after{background-image:url(https://maps.gstatic.com/mapfiles/api-3/images/powered-by-google-on-white3_hdpi.png)}.pac-item{cursor:default;padding:0 4px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;line-height:30px;text-align:left;border-top:1px solid #e6e6e6;font-size:11px;color:#999}.pac-item:hover{background-color:#fafafa}.pac-item-selected,.pac-item-selected:hover{background-color:#ebf2fe}.pac-matched{font-weight:700}.pac-item-query{font-size:13px;padding-right:3px;color:#000}.pac-icon{width:15px;height:20px;margin-right:7px;margin-top:6px;display:inline-block;vertical-align:top;background-image:url(https://maps.gstatic.com/mapfiles/api-3/images/autocomplete-icons.png);background-size:34px}.hdpi .pac-icon{background-image:url(https://maps.gstatic.com/mapfiles/api-3/images/autocomplete-icons_hdpi.png)}.pac-icon-search{background-position:-1px -1px}.pac-item-selected .pac-icon-search{background-position:-18px -1px}.pac-icon-marker{background-position:-1px -161px}.pac-item-selected .pac-icon-marker{background-position:-18px -161px}.pac-placeholder{color:gray}.pac-target-input:-webkit-autofill{animation-name:beginBrowserAutofill}.pac-target-input:not(:-webkit-autofill){animation-name:endBrowserAutofill}
 </style>
@@ -17,7 +17,7 @@
 
     <meta name="description" content="">
     <meta name="author" content="">
-    <link rel="shortcut icon" type="image/png" href="https://houstonrabbit.com/uploads/e632445069e2838d2ca83d968d9d2435cc0726fd.png">
+    <link rel="shortcut icon" type="image/png" href="https://vcabb.com/uploads/e632445069e2838d2ca83d968d9d2435cc0726fd.png">
 
     <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('css/font-awesome.min.css') }}" rel="stylesheet">
@@ -38,7 +38,7 @@
                                 <span class="icon-bar"></span>
                             </button>
 
-                            <a class="navbar-brand" href="https://houstonrabbit.com/"><img src="{{asset('images/41e5658d2d5d6e64e9b308a60f2282e5b487cf98.png')}}"></a>
+                            <a class="navbar-brand" href="https://vcabb.com/"><img src="{{asset('images/41e5658d2d5d6e64e9b308a60f2282e5b487cf98.png')}}"></a>
                         </div>
                         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                             <ul class="nav navbar-nav">
@@ -48,19 +48,19 @@
                                 <!-- <li>
                                     <a href="">Drive</a>
                                 </li>
-                                 <li><a href="https://houstonrabbit.com/help">Help</a></li> -->
+                                 <li><a href="https://vcabb.com/help">Help</a></li> -->
 
                             </ul>
                             <!-- <ul class="nav navbar-nav navbar-right">
 
-                                <li><a class="btn-outline" href="https://houstonrabbit.com/verify">Signup to Ride</a></li>
-                                <li><a class="menu-btn" href="https://houstonrabbit.com/provider/verify">Signup to Drive</a></li>
+                                <li><a class="btn-outline" href="https://vcabb.com/verify">Signup to Ride</a></li>
+                                <li><a class="menu-btn" href="https://vcabb.com/provider/verify">Signup to Drive</a></li>
                             </ul> -->
                         </div>
                     </div>
                 </nav>
             </header>
-<div class="banner row no-margin" style="background-position: center; background-image: url(&#39;https://houstonrabbit.com/asset/img/slider-bg-1.jpg&#39;);">
+<div class="banner row no-margin" style="background-position: center; background-image: url(&#39;https://vcabb.com/asset/img/slider-bg-1.jpg&#39;);">
     <div class="banner-overlay"></div>
     <div class="container slider pad-60">
         <div class="row">
@@ -157,7 +157,7 @@
             <p>What makes the vCabb experience truly great are the people behind the wheel. They are mothers and fathers. Students and teachers. Veterans. Neighbors. Friends. Our partners drive their own cars—on their own schedule—in cities big and small. Which is why more than one million people worldwide have signed up to drive.</p>
             <a class="content-more more-btn" href="">WHY DRIVE WITH vCabb <i class="fa fa-chevron-right"></i></a>
         </div>
-        <div class="col-md-6 full-img text-center" style="background-image: url(https://houstonrabbit.com/asset/img/behind-the-wheel.jpg);">
+        <div class="col-md-6 full-img text-center" style="background-image: url(https://vcabb.com/asset/img/behind-the-wheel.jpg);">
         </div>
     </div>
 </div>
@@ -186,7 +186,7 @@
             <p>Whether riding in the backseat or driving up front, every part of the vCabb experience has been designed around your safety and security.</p>
             <a class="content-more more-btn" href="">HOW WE KEEP YOU SAFE <i class="fa fa-chevron-right"></i></a>
         </div>
-        <div class="col-md-6 full-img text-center" style="background-image: url(https://houstonrabbit.com/asset/img/safty-bg.jpg);">
+        <div class="col-md-6 full-img text-center" style="background-image: url(https://vcabb.com/asset/img/safty-bg.jpg);">
         </div>
     </div>
 </div>
@@ -281,8 +281,8 @@
             <div class="col-md-6 col-md-offset-3">
                  <div class="socil-media">
                    <ul>
-                                    <li><a target="_blank" href="https://www.facebook.com/houstonrabbit"><i class="fa fa-3x fa-facebook"></i></a></li>
-                                    <li><a target="_blank" href="https://twitter.com/houstonrabbit"><i class="fa fa-3x fa-twitter"></i></a></li>
+                                    <li><a target="_blank" href="https://www.facebook.com/vcabb"><i class="fa fa-3x fa-facebook"></i></a></li>
+                                    <li><a target="_blank" href="https://twitter.com/vcabb"><i class="fa fa-3x fa-twitter"></i></a></li>
                                 </ul>
                  </div>
              </div>
