@@ -2993,6 +2993,7 @@ class BookingController extends Controller {
 	{
 		$url = "https://maps.googleapis.com/maps/api/distancematrix/json?key=AIzaSyCy4z_zZuEpnXJU2mC7S-AFtbiWH8M5ZT0&origins=".$lat1.",".$long1."&destinations=".$lat2.",".$long2."&mode=driving";
 		$ch = curl_init();
+		info($url);
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_PROXYPORT, 3128);
