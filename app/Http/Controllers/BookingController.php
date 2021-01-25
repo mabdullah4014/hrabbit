@@ -2876,7 +2876,7 @@ class BookingController extends Controller {
 
 						if ($driver != "") {
 							
-							if ($driver['status'] == 1 && $driver['l'][0] != 0 && $driver['l'][1] != 0) {
+							if (isset($driver['status']) && $driver['status'] == 1 && $driver['l'][0] != 0 && $driver['l'][1] != 0) {
 								$distance = $this->getDistanceBetweenTwoLocations($c_lat, $c_lon, $driver['l'][0], $driver['l'][1]);
 								info("********************************************");
 								info("driver id");
