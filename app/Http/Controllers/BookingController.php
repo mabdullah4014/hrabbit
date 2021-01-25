@@ -3024,13 +3024,13 @@ class BookingController extends Controller {
 			$distance = explode(" ", $distance['distance'])[0];
 		}
 		info($distance);
-		switch($unit) { 
-			case 'Mi': 
-				$distance = $distance / 1.609344; 
-				break; 
-			case 'Km' : 
-				break; 
-		} 
+		// switch($unit) { 
+		// 	case 'Mi': 
+		// 		$distance = $distance / 1.609344; 
+		// 		break; 
+		// 	case 'Km' : 
+		// 		break; 
+		// } 
 		return (round($distance,2)); 
 	}
 	protected function driverList($data) {
