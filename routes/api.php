@@ -81,7 +81,6 @@ Route::post('booking/countriesList', 'BookingController@countriesList');
 Route::post('booking/stateList', 'BookingController@stateList');
 Route::post('booking/driverList', 'BookingController@driverList');
 Route::post('booking/history/viewJobs', 'BookingController@viewJobs');
-Route::post('calculate_estimate', 'BookingController@calculateEstimate');
 Route::get('croncheck', 'BookingController@cronCheck');
 Route::post('automatic_assign', 'BookingController@automatic_assign');
 Route::post('get_booking_data', 'BookingController@get_booking_data');

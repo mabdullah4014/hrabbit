@@ -2991,20 +2991,33 @@ class BookingController extends Controller {
 
 	public function GetDrivingDistance($lat1, $lat2, $long1, $long2)
 	{
-		$url = "https://maps.googleapis.com/maps/api/distancematrix/json?key=AIzaSyCy4z_zZuEpnXJU2mC7S-AFtbiWH8M5ZT0&origins=".$lat1.",".$long1."&destinations=".$lat2.",".$long2."&mode=driving&units=imperial";
-		$ch = curl_init();
-		info($url);
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_PROXYPORT, 3128);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-		$response = curl_exec($ch);
-		info($response);
-		curl_close($ch);
-		$response_a = json_decode($response, true);
-		$dist = $response_a['rows'][0]['elements'][0]['distance']['text'];
-		$time = $response_a['rows'][0]['elements'][0]['duration']['text'];
+		$dist = 0;
+		$time = 0;
+		try{
+			$url = "https://maps.googleapis.com/maps/api/distancematrix/json?key=AIzaSyCy4z_zZuEpnXJU2mC7S-AFtbiWH8M5ZT0&origins=".$lat1.",".$long1."&destinations=".$lat2.",".$long2."&mode=driving&units=imperial";
+			$ch = curl_init();
+			info($url);
+			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($ch, CURLOPT_PROXYPORT, 3128);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+			$response = curl_exec($ch);
+			info($response);
+			curl_close($ch);
+			$response_a = json_decode($response, true);
+			$dist = $response_a['rows'][0]['elements'][0]['distance']['text'];
+			if(explode(" ", $dist)[1] == "ft"){
+				$dist = 0;
+			}
+			else{
+				$dist = explode(" ", $dist)[0];
+			}
+			$time = $response_a['rows'][0]['elements'][0]['duration']['text'];
+		}
+		catch(\Exception $ex){
+
+		}
 
 		return array('distance' => $dist, 'time' => $time);
 	}
@@ -3091,29 +3104,4 @@ class BookingController extends Controller {
 		return Customer::where('email', 'like', '%' . $q . '%')->get(['email as data', DB::raw('email as value')]);
 		exit;
 	}
-
-	public function calculateEstimate(Request $request) {
-		$input = $request->all();
-		$distance = $this->findDistance($input['from_lat'], $input['from_lng'], $input['to_lat'], $input['to_lng']);
-		$fares = DB::table('vehicle_categories')->where('id', $input['vehicle_id'])->first();
-		$distance_unit = DB::table('app_settings')->where('id', 1)->value('distance_unit');
-		$total_fare = $fares->base_fare + ($fares->price_per_km * $distance);
-		$result['fare'] = number_format($total_fare, 2);
-		$result['distance'] = number_format($distance, 2) . ' ' . $distance_unit;
-
-		return json_encode($result);
-	}
-
-	public function findDistance($from_lat, $from_lng, $to_lat, $to_lng) {
-		$ch = curl_init('https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=' . $from_lat . ',' . $from_lng . '&destinations=' . $to_lat . ',' . $to_lng . '&key=' . env('GOOGLE_MAP_API_KEY'));
-		curl_setopt($ch, CURLOPT_POST, 1);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, '');
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		$result = curl_exec($ch);
-		curl_close($ch);
-		$result = json_decode($result);
-		$miles = (float) $result->rows[0]->elements[0]->distance->text;
-		return $miles * 1.60934;
-	}
-
 }
