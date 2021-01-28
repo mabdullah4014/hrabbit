@@ -881,81 +881,80 @@ class BookingController extends Controller {
 			}
 
 			$data['latitude'] = $input['pickup_lat'];
-				$data['longitude'] = $input['pickup_lon'];
-				$data['vehicle_id'] = $input['vehicle_id'];
-				if (isset($input['favorite_driver_id']) && !empty($input['favorite_driver_id'])) {
-					$id = explode("_", $input['favorite_driver_id'])[1];
-					$data['favorite_driver_id'] = $id;
-				}
-				// $driverList = $this->driverList($data);
-				$driverList = $this->available_drivers($data);
-				info(json_encode($driverList));
-				if (count($driverList) > 0) {
-					info("Yes! Driver(s) available");
-					$input['customer_avatar'] = ($customer->avatar != "" ? $customer->avatar : "");
-					/*$email = $customer->email;
-						$name = $customer->name;
-						$social_url=DB::table('settings')->first();
-						$skype=$social_url->skype;
-						$facebook=$social_url->facebook;
-						$twitter=$social_url->twitter;
-						$app_name=env("APP_NAME");
-						$from_mail=env("MAIL_USERNAME");
-						$website=$social_url->website_url;
-						$email_to=$social_url->mail_to;
-						$logo=$social_url->logo_url;
-						$admin_mail=$social_url->email;
-						$content=Email::select('content')->where('template_name', '=', 'Customer Trip Save')->first();
-						$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
-
-					*/
-
-					$response['message'] = "Request sent";
-					/// Save data to firebase ///
-					$this->saveFirebase($input, $driverList);
-
-					$this->deleteFirebase($input['booking_id']);
-
-					/*Mail::send('mails.customerTripSave', $mail_header, function ($message)
-						 use ($email,$from_mail, $app_name) {
-							$message->from($from_mail, $app_name);
-							$message->subject('Trip Save');
-							$message->to($email);
-						});*/
-
-				} else {
-					// if($input['booking_id'] == 0){
-						info("driver not available");
-					$this->saveBookingInFirebase($input);
-					// }
-
-					$response['message'] = "Driver is not available";
-					$response['code'] = 200;
-				}
-				
-			if ($input['customer_id'] != '0') {
-				$customer = Customer::find($input['customer_id']);
-
-				if ($customer->status != 1) {
-					$response['message'] = "Your account is blocked,kindly contact Admin";
-					return $response;
-				}
-			} else {
-				$customer = new Customer();
-				$customer->phone_number = isset($input['phone_num']) ? $input['phone_num'] : '0';
-				$customer->email = isset($input['customer_email']) ? $input['customer_email'] : '0';
-				$customer->name = isset($input['customer_name']) ? $input['customer_name'] : '0';
-				$customer->member_type = 'guest';
-				$customer->status = '1';
-				/*if($input['booking_id'] != 0){
-						$customer->update();
-					}else{
-				*/
-				$customer->save();
-
-				$customer = Customer::find($customer->id);
+			$data['longitude'] = $input['pickup_lon'];
+			$data['vehicle_id'] = $input['vehicle_id'];
+			if (isset($input['favorite_driver_id']) && !empty($input['favorite_driver_id'])) {
+				$id = explode("_", $input['favorite_driver_id'])[1];
+				$data['favorite_driver_id'] = $id;
 			}
-			
+			// $driverList = $this->driverList($data);
+			$driverList = $this->available_drivers($data);
+			info(json_encode($driverList));
+			if (count($driverList) > 0) {
+				info("Yes! Driver(s) available");
+				if ($input['customer_id'] != '0') {
+					$customer = Customer::find($input['customer_id']);
+					if ($customer->status != 1) {
+						$response['message'] = "Your account is blocked,kindly contact Admin";
+						return $response;
+					}
+				} else {
+					$customer = new Customer();
+					$customer->phone_number = isset($input['phone_num']) ? $input['phone_num'] : '0';
+					$customer->email = isset($input['customer_email']) ? $input['customer_email'] : '0';
+					$customer->name = isset($input['customer_name']) ? $input['customer_name'] : '0';
+					$customer->member_type = 'guest';
+					$customer->status = '1';
+					/*if($input['booking_id'] != 0){
+							$customer->update();
+						}else{
+					*/
+					$customer->save();
+
+					$customer = Customer::find($customer->id);
+				}
+				$input['customer_avatar'] = ($customer->avatar != "" ? $customer->avatar : "");
+				/*$email = $customer->email;
+					$name = $customer->name;
+					$social_url=DB::table('settings')->first();
+					$skype=$social_url->skype;
+					$facebook=$social_url->facebook;
+					$twitter=$social_url->twitter;
+					$app_name=env("APP_NAME");
+					$from_mail=env("MAIL_USERNAME");
+					$website=$social_url->website_url;
+					$email_to=$social_url->mail_to;
+					$logo=$social_url->logo_url;
+					$admin_mail=$social_url->email;
+					$content=Email::select('content')->where('template_name', '=', 'Customer Trip Save')->first();
+					$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
+
+				*/
+
+				$response['message'] = "Request sent";
+				/// Save data to firebase ///
+				$this->saveFirebase($input, $driverList);
+
+				$this->deleteFirebase($input['booking_id']);
+
+				/*Mail::send('mails.customerTripSave', $mail_header, function ($message)
+						use ($email,$from_mail, $app_name) {
+						$message->from($from_mail, $app_name);
+						$message->subject('Trip Save');
+						$message->to($email);
+					});*/
+
+			} else {
+				// if($input['booking_id'] == 0){
+					info("driver not available");
+				$this->saveBookingInFirebase($input);
+				// }
+
+				$response['message'] = "Driver is not available";
+				$response['code'] = 200;
+				return response()->json($response, 200);
+			}
+							
 			$driver_pickup_distance_in_miles = $input['distance'] * 0.000621371192;
 			$input['driver_pickup_distance'] = $input['estimated_distance'] = $driver_pickup_distance_in_miles;
 			$pickup_drop_distance_in_miles = $input['distance_pick_drop'] * 0.000621371192;
@@ -2880,29 +2879,31 @@ class BookingController extends Controller {
 							
 							if (array_key_exists('status', $driver) && $driver['status'] == 1 && $driver['l'][0] != 0 && $driver['l'][1] != 0) {
 								$distance = $this->getDistanceBetweenTwoLocations($c_lat, $c_lon, $driver['l'][0], $driver['l'][1]);
-								info("********************************************");
-								info("driver id");
-								info($key);
-								info("driver lat");
-								info($driver['l'][0]);
-								info("driver long");
-								info($driver['l'][1]);
-								info("current lat");
-								info($c_lat);
-								info("current long");
-								info($c_lon);
-								info("driver distance");
-								info($distance);
-								info("radius");
-								info($radius);
-								if ($distance <= $radius) {
-									info("less than");
-									if (isset($data["favorite_driver_id"]) && $key == $data["favorite_driver_id"]) {
-										$result = array();
-										$result[] = $driver_profile->toArray();
-										return $result;
-									} else {
-										$result[] = $driver_profile->toArray();
+								if($distance != null){
+									info("********************************************");
+									info("driver id");
+									info($key);
+									info("driver lat");
+									info($driver['l'][0]);
+									info("driver long");
+									info($driver['l'][1]);
+									info("current lat");
+									info($c_lat);
+									info("current long");
+									info($c_lon);
+									info("driver distance");
+									info($distance);
+									info("radius");
+									info($radius);
+									if ($distance <= $radius) {
+										info("less than");
+										if (isset($data["favorite_driver_id"]) && $key == $data["favorite_driver_id"]) {
+											$result = array();
+											$result[] = $driver_profile->toArray();
+											return $result;
+										} else {
+											$result[] = $driver_profile->toArray();
+										}
 									}
 								}
 								info("********************************************");
@@ -2968,7 +2969,7 @@ class BookingController extends Controller {
 			info("Drive Time");
 			info($drive_time);
 			if($fareSetting){
-				$total_fare = $pick_mileage * $fareSetting->pick_mileage +
+				$total_fare = ($pick_mileage ?? 0) * $fareSetting->pick_mileage +
 				$pick_time * $fareSetting->pick_time;
 				$mileage_limit = $fareSetting->mileage_limit;
 				if($trip_mileage <= $mileage_limit){
@@ -3018,7 +3019,7 @@ class BookingController extends Controller {
 			$time = $response_a['rows'][0]['elements'][0]['duration']['text'];
 		}
 		catch(\Exception $ex){
-
+			$dist = null;
 		}
 
 		return array('distance' => $dist, 'time' => $time);
@@ -3037,6 +3038,9 @@ class BookingController extends Controller {
 		$distance = $this->GetDrivingDistance($latitude1, $latitude2, $longitude1, $longitude2);
 		if($distance && $distance['distance']){
 			$distance = $distance['distance'];
+		}
+		else{
+			return null;
 		}
 		info($distance);
 		// switch($unit) { 
