@@ -1072,7 +1072,7 @@ class BookingController extends Controller {
 				} else {
 					// if($input['booking_id'] == 0){
 					info("driver not available");
-					// $this->saveBookingInFirebase($input);
+					$this->saveBookingInFirebase($input);
 					// }
 
 					$response['message'] = "Driver is not available";
