@@ -880,6 +880,59 @@ class BookingController extends Controller {
 				return $this->sendError('Validation Error.' . $validator->errors());
 			}
 
+			$data['latitude'] = $input['pickup_lat'];
+				$data['longitude'] = $input['pickup_lon'];
+				$data['vehicle_id'] = $input['vehicle_id'];
+				if (isset($input['favorite_driver_id']) && !empty($input['favorite_driver_id'])) {
+					$id = explode("_", $input['favorite_driver_id'])[1];
+					$data['favorite_driver_id'] = $id;
+				}
+				// $driverList = $this->driverList($data);
+				$driverList = $this->available_drivers($data);
+				info(json_encode($driverList));
+				if (count($driverList) > 0) {
+					info("Yes! Driver(s) available");
+					$input['customer_avatar'] = ($customer->avatar != "" ? $customer->avatar : "");
+					/*$email = $customer->email;
+						$name = $customer->name;
+						$social_url=DB::table('settings')->first();
+						$skype=$social_url->skype;
+						$facebook=$social_url->facebook;
+						$twitter=$social_url->twitter;
+						$app_name=env("APP_NAME");
+						$from_mail=env("MAIL_USERNAME");
+						$website=$social_url->website_url;
+						$email_to=$social_url->mail_to;
+						$logo=$social_url->logo_url;
+						$admin_mail=$social_url->email;
+						$content=Email::select('content')->where('template_name', '=', 'Customer Trip Save')->first();
+						$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
+
+					*/
+
+					$response['message'] = "Request sent";
+					/// Save data to firebase ///
+					$this->saveFirebase($input, $driverList);
+
+					$this->deleteFirebase($input['booking_id']);
+
+					/*Mail::send('mails.customerTripSave', $mail_header, function ($message)
+						 use ($email,$from_mail, $app_name) {
+							$message->from($from_mail, $app_name);
+							$message->subject('Trip Save');
+							$message->to($email);
+						});*/
+
+				} else {
+					// if($input['booking_id'] == 0){
+						info("driver not available");
+					$this->saveBookingInFirebase($input);
+					// }
+
+					$response['message'] = "Driver is not available";
+					$response['code'] = 200;
+				}
+				
 			if ($input['customer_id'] != '0') {
 				$customer = Customer::find($input['customer_id']);
 
@@ -1027,58 +1080,7 @@ class BookingController extends Controller {
 					'result' => $input,
 					'message' => "Request sent",
 				];
-				$data['latitude'] = $input['pickup_lat'];
-				$data['longitude'] = $input['pickup_lon'];
-				$data['vehicle_id'] = $input['vehicle_id'];
-				if (isset($input['favorite_driver_id']) && !empty($input['favorite_driver_id'])) {
-					$id = explode("_", $input['favorite_driver_id'])[1];
-					$data['favorite_driver_id'] = $id;
-				}
-				// $driverList = $this->driverList($data);
-				$driverList = $this->available_drivers($data);
-				info(json_encode($driverList));
-				if (count($driverList) > 0) {
-					info("Yes! Driver(s) available");
-					$input['customer_avatar'] = ($customer->avatar != "" ? $customer->avatar : "");
-					/*$email = $customer->email;
-						$name = $customer->name;
-						$social_url=DB::table('settings')->first();
-						$skype=$social_url->skype;
-						$facebook=$social_url->facebook;
-						$twitter=$social_url->twitter;
-						$app_name=env("APP_NAME");
-						$from_mail=env("MAIL_USERNAME");
-						$website=$social_url->website_url;
-						$email_to=$social_url->mail_to;
-						$logo=$social_url->logo_url;
-						$admin_mail=$social_url->email;
-						$content=Email::select('content')->where('template_name', '=', 'Customer Trip Save')->first();
-						$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
-
-					*/
-
-					$response['message'] = "Request sent";
-					/// Save data to firebase ///
-					$this->saveFirebase($input, $driverList);
-
-					$this->deleteFirebase($input['booking_id']);
-
-					/*Mail::send('mails.customerTripSave', $mail_header, function ($message)
-						 use ($email,$from_mail, $app_name) {
-							$message->from($from_mail, $app_name);
-							$message->subject('Trip Save');
-							$message->to($email);
-						});*/
-
-				} else {
-					// if($input['booking_id'] == 0){
-						info("driver not available");
-					$this->saveBookingInFirebase($input);
-					// }
-
-					$response['message'] = "Driver is not available";
-					$response['code'] = 200;
-				}
+				
 				
 			} else {
 				$response['code'] = 500;
@@ -3034,7 +3036,7 @@ class BookingController extends Controller {
 		// $distance = $distance * 60 * 1.1515; 
 		$distance = $this->GetDrivingDistance($latitude1, $latitude2, $longitude1, $longitude2);
 		if($distance && $distance['distance']){
-			$distance = explode(" ", $distance['distance'])[0];
+			$distance = $distance['distance'];
 		}
 		info($distance);
 		// switch($unit) { 
