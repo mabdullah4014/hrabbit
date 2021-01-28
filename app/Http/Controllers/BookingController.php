@@ -890,8 +890,6 @@ class BookingController extends Controller {
 			// $driverList = $this->driverList($data);
 			$driverList = $this->available_drivers($data);
 			info(json_encode($driverList));
-			if (count($driverList) > 0) {
-				info("Yes! Driver(s) available");
 				if ($input['customer_id'] != '0') {
 					$customer = Customer::find($input['customer_id']);
 					if ($customer->status != 1) {
@@ -942,19 +940,7 @@ class BookingController extends Controller {
 						$message->from($from_mail, $app_name);
 						$message->subject('Trip Save');
 						$message->to($email);
-					});*/
-
-			} else {
-				// if($input['booking_id'] == 0){
-					info("driver not available");
-				// $this->saveBookingInFirebase($input);
-				// }
-
-				$response['message'] = "Driver is not available";
-				$response['code'] = 200;
-				return response()->json($response, 200);
-			}
-							
+					});*/							
 			$driver_pickup_distance_in_miles = $input['distance'] * 0.000621371192;
 			$input['driver_pickup_distance'] = $input['estimated_distance'] = $driver_pickup_distance_in_miles;
 			$pickup_drop_distance_in_miles = $input['distance_pick_drop'] * 0.000621371192;
@@ -992,37 +978,39 @@ class BookingController extends Controller {
 				$input['payment_name'] = "points";
 			}
 			else{
-				$paymentResponse = \App\Http\Authorize::chargeCustomerProfile($customer->customerProfileId, $customer->customerPaymentProfileId, $input['advance_amount'] - $customer->points/100);
-				$customer->points = 0;
-				$customer->save();
-				// info($paymentResponse);
-				if ($paymentResponse != null) {
-					if ($paymentResponse['resultCode'] == "Ok") {
-						$tresponse = $paymentResponse['transaction'];
-						if ($tresponse != null) {
-							$input['advance_transaction_id'] = $tresponse['transId'];
-							$input['payment_status'] = "1";
-							$input['payment_name'] = "authorize";
+				if(count($driverList) > 0){
+					$paymentResponse = \App\Http\Authorize::chargeCustomerProfile($customer->customerProfileId, $customer->customerPaymentProfileId, $input['advance_amount'] - $customer->points/100);
+					$customer->points = 0;
+					$customer->save();
+					// info($paymentResponse);
+					if ($paymentResponse != null) {
+						if ($paymentResponse['resultCode'] == "Ok") {
+							$tresponse = $paymentResponse['transaction'];
+							if ($tresponse != null) {
+								$input['advance_transaction_id'] = $tresponse['transId'];
+								$input['payment_status'] = "1";
+								$input['payment_name'] = "authorize";
+							}
+							else {
+								// info("1");
+								$response['code'] = 500;
+								$response['message'] = 'Auhtorize Payment Failure';
+								return response()->json($response, 200);
+							}
 						}
 						else {
-							// info("1");
+							// info("2");
 							$response['code'] = 500;
-							$response['message'] = 'Auhtorize Payment Failure';
+							$response['message'] = $paymentResponse["message"]["text"];
 							return response()->json($response, 200);
 						}
 					}
 					else {
-						// info("2");
+						// info("3");
 						$response['code'] = 500;
-						$response['message'] = $paymentResponse["message"]["text"];
+						$response['message'] = 'Auhtorize Payment Failure';
 						return response()->json($response, 200);
 					}
-				}
-				else {
-					// info("3");
-					$response['code'] = 500;
-					$response['message'] = 'Auhtorize Payment Failure';
-					return response()->json($response, 200);
 				}
 			}
 			$input['trip_num'] = str_random(4);
@@ -1079,8 +1067,18 @@ class BookingController extends Controller {
 					'result' => $input,
 					'message' => "Request sent",
 				];
-				
-				
+				if (count($driverList) > 0) {
+					info("Yes! Driver(s) available");
+				} else {
+					// if($input['booking_id'] == 0){
+					info("driver not available");
+					// $this->saveBookingInFirebase($input);
+					// }
+
+					$response['message'] = "Driver is not available";
+					$response['code'] = 200;
+					return response()->json($response, 200);
+				}
 			} else {
 				$response['code'] = 500;
 				$response['message'] = 'failure';
