@@ -890,57 +890,25 @@ class BookingController extends Controller {
 			// $driverList = $this->driverList($data);
 			$driverList = $this->available_drivers($data);
 			info(json_encode($driverList));
-				if ($input['customer_id'] != '0') {
-					$customer = Customer::find($input['customer_id']);
-					if ($customer->status != 1) {
-						$response['message'] = "Your account is blocked,kindly contact Admin";
-						return $response;
-					}
-				} else {
-					$customer = new Customer();
-					$customer->phone_number = isset($input['phone_num']) ? $input['phone_num'] : '0';
-					$customer->email = isset($input['customer_email']) ? $input['customer_email'] : '0';
-					$customer->name = isset($input['customer_name']) ? $input['customer_name'] : '0';
-					$customer->member_type = 'guest';
-					$customer->status = '1';
-					/*if($input['booking_id'] != 0){
-							$customer->update();
-						}else{
-					*/
-					$customer->save();
-
-					$customer = Customer::find($customer->id);
+			
+			if ($input['customer_id'] != '0') {
+				$customer = Customer::find($input['customer_id']);
+				if ($customer->status != 1) {
+					$response['message'] = "Your account is blocked,kindly contact Admin";
+					return $response;
 				}
-				$input['customer_avatar'] = ($customer->avatar != "" ? $customer->avatar : "");
-				/*$email = $customer->email;
-					$name = $customer->name;
-					$social_url=DB::table('settings')->first();
-					$skype=$social_url->skype;
-					$facebook=$social_url->facebook;
-					$twitter=$social_url->twitter;
-					$app_name=env("APP_NAME");
-					$from_mail=env("MAIL_USERNAME");
-					$website=$social_url->website_url;
-					$email_to=$social_url->mail_to;
-					$logo=$social_url->logo_url;
-					$admin_mail=$social_url->email;
-					$content=Email::select('content')->where('template_name', '=', 'Customer Trip Save')->first();
-					$content=str_replace("{{env('APP_NAME')}}", $app_name, $content->content);
+			} else {
+				$customer = new Customer();
+				$customer->phone_number = isset($input['phone_num']) ? $input['phone_num'] : '0';
+				$customer->email = isset($input['customer_email']) ? $input['customer_email'] : '0';
+				$customer->name = isset($input['customer_name']) ? $input['customer_name'] : '0';
+				$customer->member_type = 'guest';
+				$customer->status = '1';
+				$customer->save();
 
-				*/
-
-				$response['message'] = "Request sent";
-				/// Save data to firebase ///
-				$this->saveFirebase($input, $driverList);
-
-				$this->deleteFirebase($input['booking_id']);
-
-				/*Mail::send('mails.customerTripSave', $mail_header, function ($message)
-						use ($email,$from_mail, $app_name) {
-						$message->from($from_mail, $app_name);
-						$message->subject('Trip Save');
-						$message->to($email);
-					});*/							
+				$customer = Customer::find($customer->id);
+			}
+			$input['customer_avatar'] = ($customer->avatar != "" ? $customer->avatar : "");			
 			$driver_pickup_distance_in_miles = $input['distance'] * 0.000621371192;
 			$input['driver_pickup_distance'] = $input['estimated_distance'] = $driver_pickup_distance_in_miles;
 			$pickup_drop_distance_in_miles = $input['distance_pick_drop'] * 0.000621371192;
@@ -1069,6 +1037,11 @@ class BookingController extends Controller {
 				];
 				if (count($driverList) > 0) {
 					info("Yes! Driver(s) available");
+					$response['message'] = "Request sent";
+					/// Save data to firebase ///
+					$this->saveFirebase($input, $driverList);
+
+					$this->deleteFirebase($input['booking_id']);
 				} else {
 					// if($input['booking_id'] == 0){
 					info("driver not available");
