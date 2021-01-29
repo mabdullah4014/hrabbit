@@ -2825,6 +2825,8 @@ class BookingController extends Controller {
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
 		$drivers = $database->getReference('drivers_location/' . $data['vehicle_id'])->getValue();
+		info("drivers from firebase");
+		info($drivers);
 		//print_r($drivers);exit;
 		//$unit = "K";
 		$driverLists = [];
@@ -3007,7 +3009,7 @@ class BookingController extends Controller {
 		// $distance = rad2deg($distance); 
 		// $distance = $distance * 60 * 1.1515; 
 		$distance = $this->GetDrivingDistance($latitude1, $latitude2, $longitude1, $longitude2);
-		if($distance && $distance['distance']){
+		if($distance && $distance['distance'] >= 0){
 			$distance = $distance['distance'];
 		}
 		else{
