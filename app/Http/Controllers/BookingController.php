@@ -2292,11 +2292,11 @@ class BookingController extends Controller {
 		return TRUE;
 	}
 	protected function saveFirebase($input, $chk) {
-		info("SaveFirebase Called");
-		info("===================");
-		info("Input");
-		info(json_encode($input));
-		info("===================");
+		// info("SaveFirebase Called");
+		// info("===================");
+		// info("Input");
+		// info(json_encode($input));
+		// info("===================");
 		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
@@ -2438,10 +2438,10 @@ class BookingController extends Controller {
 	}
 
 	protected function updateFirebase($data) {
-		info("Update Firebase Called");
-		info("======================");
-		info(json_encode($data));
-		info("======================");
+		// info("Update Firebase Called");
+		// info("======================");
+		// info(json_encode($data));
+		// info("======================");
 		// info($data['service_status']);
 		$serviceAccount = ServiceAccount::fromJsonFile(public_path() . '/' . env('FIREBASE_KEY'));
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
@@ -2825,8 +2825,8 @@ class BookingController extends Controller {
 		$firebase = (new Factory)->withServiceAccount($serviceAccount)->withDatabaseUri(env('FIREBASE_DB'))->create();
 		$database = $firebase->getDatabase();
 		$drivers = $database->getReference('drivers_location/' . $data['vehicle_id'])->getValue();
-		info("drivers from firebase");
-		info($drivers);
+		// info("drivers from firebase");
+		// info($drivers);
 		//print_r($drivers);exit;
 		//$unit = "K";
 		$driverLists = [];
@@ -2852,8 +2852,8 @@ class BookingController extends Controller {
 							
 							if (array_key_exists('status', $driver) && $driver['status'] == 1 && $driver['l'][0] != 0 && $driver['l'][1] != 0) {
 								$distance = $this->getDistanceBetweenTwoLocations($c_lat, $c_lon, $driver['l'][0], $driver['l'][1]);
-								if($distance != null){
-									info("********************************************");
+								if($distance != null && $distance >= 0){
+									info("************distance is not null in getDistanceBetweenTwoLocations*******************");
 									info("driver id");
 									info($key);
 									info("driver lat");
@@ -2879,7 +2879,9 @@ class BookingController extends Controller {
 										}
 									}
 								}
-								info("********************************************");
+								else{
+									info("**********distance is null in getDistanceBetweenTwoLocations*****************************");
+								}
 							}
 						}
 					}
@@ -2914,11 +2916,14 @@ class BookingController extends Controller {
 		}
 	}
 	public function getTripFare($tripId) {
+		info("=============getTripFare Start=======================");
 		$trip = DriverTrip::where('id', $tripId)->first();
 		$total_fare = 0;
-		info($tripId);
 		if($trip){
 			$pick_mileage = $this->getDistanceBetweenTwoLocations($trip->driver_pick_start_lat, $trip->driver_pick_start_lon, $trip->pickup_lat, $trip->pickup_lon);
+			if($pick_mileage < 0){
+				$pick_mileage = 0;
+			}
 			info("Pick Mileage");
 			info($pick_mileage);
 			$to = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $trip->driver_pick_end_time);
@@ -2961,7 +2966,7 @@ class BookingController extends Controller {
 				return $fareSetting->min_fare;
 			}
 		}
-		info("==========================================");
+		info("=============getTripFare End=======================");
 		return $total_fare;
 	}
 
@@ -2984,7 +2989,7 @@ class BookingController extends Controller {
 			$response_a = json_decode($response, true);
 			$dist = $response_a['rows'][0]['elements'][0]['distance']['text'];
 			if(explode(" ", $dist)[1] == "ft"){
-				$dist = 0;
+				$dist = explode(" ", $dist)[0] * 0.000189394;
 			}
 			else{
 				$dist = explode(" ", $dist)[0];
@@ -3009,12 +3014,13 @@ class BookingController extends Controller {
 		// $distance = rad2deg($distance); 
 		// $distance = $distance * 60 * 1.1515; 
 		$distance = $this->GetDrivingDistance($latitude1, $latitude2, $longitude1, $longitude2);
-		if($distance && $distance['distance'] >= 0){
+		if($distance != null && $distance['distance'] >= 0){
 			$distance = $distance['distance'];
 		}
 		else{
-			return null;
+			$distance = -1;
 		}
+		info("distance is");
 		info($distance);
 		// switch($unit) { 
 		// 	case 'Mi': 
