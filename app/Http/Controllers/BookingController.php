@@ -2852,7 +2852,7 @@ class BookingController extends Controller {
 							
 							if (array_key_exists('status', $driver) && $driver['status'] == 1 && $driver['l'][0] != 0 && $driver['l'][1] != 0) {
 								$distance = $this->getDistanceBetweenTwoLocations($c_lat, $c_lon, $driver['l'][0], $driver['l'][1]);
-								if($distance != null && $distance >= 0){
+								if($distance >= 0){
 									info("************distance is not null in getDistanceBetweenTwoLocations*******************");
 									info("driver id");
 									info($key);
